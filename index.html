@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>生活記録表</title>
+<style>
+/* Layout: paper-form feel — one day edited at a time (big cells for fingers), 2-week overview below */
+:root{
+  --bg:#F6F7F9; --paper:#FFFFFF; --ink:#1F2933; --muted:#5B6672; --line:#C9CFD6; --line-strong:#7B8794;
+  --accent:#1E5AA8; --accent-soft:#E3ECF8; --danger:#B42318; --star:#C00000;
+  --c-睡:#8EB4E3; --c-食:#FFE94F; --c-家:#FF9F43; --c-外:#A9D08E; --c-仕:#F4B6D2; --c-趣:#C5A3E0; --c-学:#C8A27A; --c-運:#7FD8E6;
+  --font:"BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Meiryo","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px}
+.wrap{max-width:1100px;margin:0 auto;display:grid;gap:16px}
+h1{font-size:1.6rem;margin:0;letter-spacing:.02em}
+h2{font-size:1.15rem;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+h2::before{content:"";width:6px;height:1.1em;background:var(--accent);border-radius:2px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.lead{margin:4px 0 0;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
+label.f{display:grid;gap:4px;font-weight:700}
+input[type=text],input[type=date],select,textarea{font:inherit;font-size:18px;padding:10px 12px;border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);min-height:48px}
+input[type=text]{width:min(320px,100%)}
+textarea{width:100%;min-height:72px;resize:vertical}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.note{font-size:.95rem;color:var(--muted)}
+details summary{cursor:pointer;font-weight:700;font-size:1.05rem;padding:4px 0}
+details[open] summary{margin-bottom:8px}
+ol.how{margin:0;padding-left:1.4em;display:grid;gap:4px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 16px;margin-top:8px}
+.legend div{display:flex;gap:8px;align-items:center}
+.chip{display:inline-grid;place-items:center;width:2em;height:2em;border:1px solid var(--line-strong);border-radius:6px;font-weight:700;flex:none}
+.scale{display:grid;gap:2px;margin:6px 0 0;padding-left:0;list-style:none}
+.scale b{display:inline-block;width:1.6em}
+
+/* tool palette */
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;box-shadow:0 2px 8px rgba(31,41,51,.08)}
+.tools .t-label{font-size:.9rem;color:var(--muted)}
+.palette{display:flex;flex-wrap:wrap;gap:6px}
+.tool{font:inherit;display:flex;align-items:center;gap:4px;border:2px solid var(--line-strong);border-radius:8px;background:#fff;padding:4px 10px 4px 4px;min-height:48px;cursor:pointer;color:var(--ink)}
+.tool .sw{display:grid;place-items:center;width:36px;height:36px;border-radius:6px;font-weight:700;font-size:20px}
+.tool .nm{font-size:.95rem}
+.tool[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset;background:var(--accent-soft)}
+
+/* day selector */
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day-btn{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:6px 2px;cursor:pointer;display:grid;justify-items:center;line-height:1.25;min-height:56px;color:var(--ink)}
+.day-btn .d{font-weight:700;font-size:1.15rem}
+.day-btn .w{font-size:.85rem;color:var(--muted)}
+.day-btn .bar{width:80%;height:5px;border-radius:3px;background:#E7EAEE;margin-top:3px;overflow:hidden}
+.day-btn .bar i{display:block;height:100%;background:var(--accent)}
+.day-btn[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--accent-soft)}
+.wk{font-size:.9rem;color:var(--muted);margin:2px 0}
+
+/* hour grid (one day) */
+.dayhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.dayhead .ttl{font-size:1.3rem;font-weight:700}
+.nav{display:flex;gap:8px}
+.btn{font:inherit;font-weight:700;border:1.5px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;min-height:48px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn:disabled{opacity:.4;cursor:default}
+.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:10px;touch-action:none;user-select:none;-webkit-user-select:none}
+@media (min-width:760px){.hours{grid-template-columns:repeat(12,minmax(0,1fr))}}
+.cell{border:1.5px solid var(--line-strong);border-radius:6px;background:#fff;min-height:58px;display:grid;grid-template-rows:auto 1fr;padding:2px 3px;cursor:pointer;position:relative}
+.cell .h{font-size:.8rem;color:var(--muted);line-height:1.1}
+.cell.night .h{font-weight:700;color:var(--ink)}
+.cell.night{background-image:linear-gradient(#EEF0F4,#EEF0F4);background-size:100% 16px;background-repeat:no-repeat}
+.cell .v{display:grid;place-items:center;font-size:22px;font-weight:700}
+.cell .s{position:absolute;right:3px;top:0;color:var(--star);font-size:18px;font-weight:700}
+.sub{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-weight:700;min-width:48px;min-height:48px;border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.hint{font-size:.85rem;color:var(--muted);margin-top:2px}
+
+/* overview */
+.ov-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.ov{border-collapse:collapse;font-size:.85rem;min-width:820px;width:100%}
+.ov th,.ov td{border:1px solid var(--line);text-align:center;padding:0;height:28px}
+.ov th{background:#EEF1F4;font-weight:700}
+.ov th.n{background:#DDE2E8}
+.ov td.dt{white-space:nowrap;padding:0 6px;font-weight:700;background:#fff;position:sticky;left:0}
+.ov td.hc{width:26px;font-weight:700;cursor:pointer;white-space:nowrap;position:relative}
+.ov td.hc i{position:absolute;right:0;top:-3px;font-style:normal;font-size:.75em;color:var(--star)}
+.ov td.cm{text-align:left;padding:0 6px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov tr.sel td.dt{background:var(--accent-soft)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.status{min-height:1.6em;font-weight:700;color:var(--accent)}
+.confirm{border:1.5px solid var(--danger);border-radius:8px;padding:12px;background:#FFF5F4;display:grid;gap:8px}
+footer{font-size:.85rem;color:var(--muted);text-align:center}
+@media (max-width:480px){
+  body{font-size:16px}
+  .days{gap:4px}
+  .day-btn{min-height:52px}
+  .tool .nm{display:none}
+  .tool{padding:4px}
+  .cell{min-height:54px}
+}
+@media print{
+  body{background:#fff;padding:0;font-size:11pt}
+  .tools,.editor,.actions,.no-print,details,.days,.status{display:none!important}
+  .panel{border:none;padding:0}
+  .ov-wrap{overflow:visible;border:none}
+  table.ov{min-width:0;font-size:8pt}
+  @page{size:A4 landscape;margin:8mm}
+}
+@media (prefers-reduced-motion:no-preference){.tool,.day-btn,.btn{transition:background-color .12s,box-shadow .12s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="panel">
+  <h1>生活記録表（2週間）</h1>
+  <p class="lead">この記録は、生活リズム（睡眠・日中の活動・気分）や体調の変化を確認し、今後の過ごし方や働き方を面談で一緒に考えるためのものです。正確さよりも、毎日続けることが大切です。おおよそで構いません。</p>
+  <div class="row" style="margin-top:12px">
+    <label class="f" for="name">氏名<input type="text" id="name" autocomplete="name" placeholder="例：山田 太郎"></label>
+    <label class="f" for="start">記録開始日<input type="date" id="start"></label>
+  </div>
+  <p class="note" style="margin:8px 0 0">🔒 入力した内容は、お使いの端末（このブラウザ）の中だけに保存され、インターネット上には送信されません。ログインも不要です。</p>
+</header>
+
+<section class="panel no-print">
+  <details id="howto">
+    <summary>記入のしかた（はじめにお読みください）</summary>
+    <ol class="how">
+      <li>「記録開始日」を選ぶと、14日分の日付と曜日が入ります。</li>
+      <li>画面上の記号（睡・食など）を選んでから、時間のマスをタップします。<b>指やマウスでなぞると、最初のマスから指を離したマスまでまとめて塗れます</b>（例：23時のマスから3時のマスまでなぞる）。</li>
+      <li>薬を飲んだ時間は「★」を選んでマスをタップします（記号と一緒に付けられます）。消すときは「消す」を選んでタップします。</li>
+      <li>1日の終わりに、気分（1〜5）と活動度（1〜7）を選び、体調や出来事をコメント欄に書きます。</li>
+      <li>入力した内容は自動で端末に保存されるので、毎日続きから記入できます。</li>
+      <li>2週間分が終わったら、下の「保存・提出」から画像やExcelで保存して送ってください。</li>
+    </ol>
+    <p class="note">※ 1マス＝1時間です（朝4時から翌朝4時まで）。何も入れていない時間は「特に何もしていない・テレビなど」として扱います。</p>
+    <div class="legend" id="legend"></div>
+    <div class="sub">
+      <div><b>気分（1〜5）</b><ul class="scale"><li><b>5</b>とても良い</li><li><b>4</b>良い</li><li><b>3</b>ふつう</li><li><b>2</b>悪い</li><li><b>1</b>とても悪い</li></ul></div>
+      <div><b>活動度（1〜7）</b>：その日の様子にいちばん近いもの<ul class="scale" id="actScale"></ul></div>
+    </div>
+  </details>
+</section>
+
+<div class="tools no-print" role="toolbar" aria-label="記号を選ぶ">
+  <div class="t-label">① 記号を選ぶ → ② マスをタップ／なぞる</div>
+  <div class="palette" id="palette"></div>
+</div>
+
+<section class="panel editor">
+  <div class="wk" id="days1lbl">1週目</div>
+  <div class="days" id="days1"></div>
+  <div class="wk" style="margin-top:6px" id="days2lbl">2週目</div>
+  <div class="days" id="days2"></div>
+</section>
+
+<section class="panel editor" id="editor">
+  <div class="dayhead">
+    <div class="ttl" id="dayTitle">1日目</div>
+    <div class="nav">
+      <button class="btn" id="prev" type="button">← 前の日</button>
+      <button class="btn" id="next" type="button">次の日 →</button>
+    </div>
+  </div>
+  <div class="hours" id="hours" aria-label="時間のマス"></div>
+  <div class="hint">マスの左上の数字は時刻です（例：「4」＝4時台）。</div>
+  <div class="sub">
+    <div><b>気分</b>（5 とても良い〜1 とても悪い）<div class="seg" id="mood"></div></div>
+    <div><b>活動度</b>（1〜7）<div class="seg" id="act"></div><div class="hint" id="actHint"></div></div>
+  </div>
+  <label class="f" for="comment" style="margin-top:12px">コメント（体調・出来事など）<textarea id="comment" placeholder="例：夜中2時に目が覚めた。午後に散歩した。"></textarea></label>
+</section>
+
+<section class="panel">
+  <h2>2週間の一覧</h2>
+  <p class="note no-print" style="margin:0 0 8px">日付をタップすると、その日の入力画面に移ります。スマホでは横にスクロールできます。</p>
+  <div class="ov-wrap"><table class="ov" id="ov"></table></div>
+</section>
+
+<section class="panel no-print">
+  <h2>保存・提出</h2>
+  <div class="actions">
+    <button class="btn primary" id="share" type="button">共有して送る（スマホ）</button>
+    <button class="btn primary" id="savePng" type="button">画像で保存</button>
+    <button class="btn" id="saveXlsx" type="button">Excelで保存</button>
+    <button class="btn" id="print" type="button">印刷・PDF（パソコン）</button>
+  </div>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+  <ul class="note" style="margin:4px 0 0;padding-left:1.2em">
+    <li><b>スマホ</b>：「共有して送る」を押し、メール・LINE・Teams・Slack・Chatworkなど送りたいアプリを選んでください。共有できない場合は「画像で保存」を押し、保存した画像を各アプリで添付してください。</li>
+    <li><b>パソコン</b>：「画像で保存」または「Excelで保存」でファイルを保存し、メールやチャットに添付してください。「印刷・PDF」で印刷画面から「PDFに保存」もできます。</li>
+    <li>健康に関わる大切な情報です。送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</li>
+  </ul>
+  <div style="margin-top:14px;display:grid;gap:8px">
+    <div><button class="btn danger" id="clear" type="button">記入内容をすべて消す</button></div>
+    <div class="confirm" id="confirmBox" hidden>
+      <div>この端末に保存されている記入内容をすべて消します。元に戻せません。よろしいですか？</div>
+      <div class="actions"><button class="btn danger" id="clearYes" type="button">消す</button><button class="btn" id="clearNo" type="button">やめる</button></div>
+    </div>
+    <div class="note">提出が終わったら消しておくと安心です（家族と共用の端末などの場合は特に）。</div>
+  </div>
+</section>
+
+<footer>生活記録表 Web版 ｜ データは端末内にのみ保存されます</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var CODES=[
+  {k:"睡",n:"睡眠",d:"睡眠（夜の睡眠、昼寝・仮眠）",c:"#8EB4E3"},
+  {k:"食",n:"食事",d:"食事",c:"#FFE94F"},
+  {k:"家",n:"家事",d:"家事・身の回りのこと",c:"#FF9F43"},
+  {k:"外",n:"外出",d:"外出（散歩・買物・図書館・通院など）",c:"#A9D08E"},
+  {k:"仕",n:"仕事",d:"会社等での仕事・業務（通勤含む）",c:"#F4B6D2"},
+  {k:"趣",n:"趣味",d:"趣味（ゲーム・読書・音楽・映画など）",c:"#C5A3E0"},
+  {k:"学",n:"学習",d:"学習（勉強・資格の勉強・リワークの課題など）",c:"#C8A27A"},
+  {k:"運",n:"運動",d:"運動（ジム・プール・ジョギング・ストレッチなど）",c:"#7FD8E6"}
+];
+var COLOR={}; CODES.forEach(function(x){COLOR[x.k]=x.c;});
+var ACT=["何もする意欲が無く、家で横になっていることが多い","家の中でゆっくりと安心してすごせる","簡単な家事など、家のことがふつうにできる","短時間の外出などできるが、疲れが翌日に残る","毎日、短時間の外出などができる","（平日は）どこかに通い、何とか課題に取り組める","（平日は）どこかに通い、集中して課題に取り組める"];
+var MOOD={5:"とても良い",4:"良い",3:"ふつう",2:"悪い",1:"とても悪い"};
+var HOURS=[]; for(var i=0;i<24;i++) HOURS.push((4+i)%24);
+var NIGHT={22:1,23:1,0:1,1:1,2:1,3:1};
+var WD=["日","月","火","水","木","金","土"];
+var KEY="seikatsu-kiroku-v1";
+
+function blank(){var d=[];for(var i=0;i<14;i++)d.push({a:Array(24).fill(""),s:Array(24).fill(false),mood:"",act:"",cm:""});return {name:"",start:"",days:d};}
+var S=blank(), cur=0, tool="睡";
+try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.days&&p.days.length===14) S=p;}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+var $=function(id){return document.getElementById(id);};
+
+function dateOf(i){
+  if(!S.start) return null;
+  var p=S.start.split("-"); if(p.length!==3) return null;
+  var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+i); return d;
+}
+function label(i,withYear){
+  var d=dateOf(i); if(!d) return (i+1)+"日目";
+  return (d.getMonth()+1)+"/"+d.getDate()+"（"+WD[d.getDay()]+"）";
+}
+function filled(day){var n=0;for(var i=0;i<24;i++) if(day.a[i]||day.s[i]) n++; return n;}
+
+/* legend & scales */
+(function(){
+  var lg=$("legend"),h="";
+  CODES.forEach(function(x){h+='<div><span class="chip" style="background:'+x.c+'">'+x.k+'</span>'+x.d+'</div>';});
+  h+='<div><span class="chip" style="color:var(--star)">★</span>薬を飲んだ（他の記号と一緒に付けられます）</div>';
+  lg.innerHTML=h;
+  var sc="";ACT.forEach(function(t,i){sc+="<li><b>"+(i+1)+"</b>"+t+"</li>";}); $("actScale").innerHTML=sc;
+})();
+
+/* palette */
+function buildPalette(){
+  var h="";
+  CODES.forEach(function(x){h+='<button type="button" class="tool" data-tool="'+x.k+'" aria-pressed="false" aria-label="'+x.n+'"><span class="sw" style="background:'+x.c+'">'+x.k+'</span><span class="nm">'+x.n+'</span></button>';});
+  h+='<button type="button" class="tool" data-tool="★" aria-pressed="false" aria-label="服薬（★）"><span class="sw" style="color:var(--star);border:1px solid var(--line)">★</span><span class="nm">服薬</span></button>';
+  h+='<button type="button" class="tool" data-tool="erase" aria-pressed="false" aria-label="消す"><span class="sw" style="border:1px dashed var(--line-strong);font-size:15px">消</span><span class="nm">消す</span></button>';
+  $("palette").innerHTML=h;
+  $("palette").addEventListener("click",function(e){var b=e.target.closest(".tool"); if(!b) return; tool=b.dataset.tool; markTool();});
+  markTool();
+}
+function markTool(){document.querySelectorAll(".tool").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.tool===tool?"true":"false");});}
+
+/* day buttons */
+function renderDays(){
+  [["days1",0],["days2",7]].forEach(function(g){
+    var h="";
+    for(var i=g[1];i<g[1]+7;i++){
+      var d=dateOf(i), top=d?String(d.getDate()):String(i+1), w=d?WD[d.getDay()]:"日目";
+      var pct=Math.round(filled(S.days[i])/24*100);
+      h+='<button type="button" class="day-btn" data-i="'+i+'" aria-current="'+(i===cur)+'"><span class="d">'+top+'</span><span class="w">'+(w||"&nbsp;")+'</span><span class="bar"><i style="width:'+pct+'%"></i></span></button>';
+    }
+    $(g[0]).innerHTML=h;
+    var a=dateOf(g[1]), z=dateOf(g[1]+6);
+    $(g[0]+"lbl").textContent=(g[1]?"2週目":"1週目")+(a?"（"+(a.getMonth()+1)+"/"+a.getDate()+"〜"+(z.getMonth()+1)+"/"+z.getDate()+"）":"");
+  });
+}
+document.addEventListener("click",function(e){var b=e.target.closest(".day-btn"); if(b){cur=+b.dataset.i; renderAll(); $("editor").scrollIntoView({block:"start",behavior:"smooth"});}});
+
+/* hour grid */
+function renderHours(){
+  var day=S.days[cur],h="";
+  HOURS.forEach(function(hr,idx){
+    var v=day.a[idx], bg=v?COLOR[v]:"#fff";
+    h+='<div class="cell'+(NIGHT[hr]?" night":"")+'" data-x="'+idx+'" style="background-color:'+bg+'" role="button" aria-label="'+hr+'時 '+(v||"空き")+(day.s[idx]?" 服薬":"")+'"><span class="h">'+hr+'</span><span class="v">'+(v||"")+'</span>'+(day.s[idx]?'<span class="s">★</span>':'')+'</div>';
+  });
+  $("hours").innerHTML=h;
+  $("dayTitle").textContent=label(cur)+"　"+(cur<7?"1週目":"2週目");
+  $("prev").disabled=cur===0; $("next").disabled=cur===13;
+}
+var painting=false, starMode=true, lastX=-1, startX=-1, snapA=null, snapS=null;
+var hoursEl=$("hours");
+function applyRange(to){
+  var day=S.days[cur], lo=Math.min(startX,to), hi=Math.max(startX,to);
+  for(var i=0;i<24;i++){
+    var inR=i>=lo&&i<=hi;
+    var na=snapA[i], ns=snapS[i];
+    if(inR){ if(tool==="erase"){na="";ns=false;} else if(tool==="★"){ns=starMode;} else na=tool; }
+    if(day.a[i]!==na||day.s[i]!==ns){ day.a[i]=na; day.s[i]=ns; drawCell(i); }
+  }
+}
+function drawCell(idx){
+  var day=S.days[cur], el=hoursEl.querySelector('[data-x="'+idx+'"]'), v=day.a[idx];
+  el.style.backgroundColor=v?COLOR[v]:"#fff";
+  el.querySelector(".v").textContent=v||"";
+  var s=el.querySelector(".s");
+  if(day.s[idx]&&!s){s=document.createElement("span");s.className="s";s.textContent="★";el.appendChild(s);}
+  if(!day.s[idx]&&s) s.remove();
+}
+hoursEl.addEventListener("pointerdown",function(e){
+  var c=e.target.closest(".cell"); if(!c) return;
+  e.preventDefault(); painting=true;
+  var idx=+c.dataset.x, day=S.days[cur];
+  snapA=day.a.slice(); snapS=day.s.slice(); startX=idx; lastX=idx;
+  if(tool==="★") starMode=!day.s[idx];
+  applyRange(idx);
+  try{hoursEl.setPointerCapture(e.pointerId);}catch(_){}
+});
+hoursEl.addEventListener("pointermove",function(e){
+  if(!painting) return;
+  var el=document.elementFromPoint(e.clientX,e.clientY); if(!el) return;
+  var c=el.closest&&el.closest(".cell"); if(!c||!hoursEl.contains(c)) return;
+  var idx=+c.dataset.x; if(idx===lastX) return;
+  lastX=idx; applyRange(idx);
+});
+function endPaint(){ if(!painting) return; painting=false; lastX=-1; save(); renderDays(); renderOverview(); }
+hoursEl.addEventListener("pointerup",endPaint);
+hoursEl.addEventListener("pointercancel",endPaint);
+hoursEl.addEventListener("lostpointercapture",endPaint);
+
+/* mood / act */
+function renderSeg(){
+  var day=S.days[cur],m="",a="";
+  [5,4,3,2,1].forEach(function(v){m+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.mood)===String(v))+'" aria-label="気分 '+v+' '+MOOD[v]+'">'+v+'</button>';});
+  for(var v=1;v<=7;v++) a+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.act)===String(v))+'" aria-label="活動度 '+v+'">'+v+'</button>';
+  $("mood").innerHTML=m; $("act").innerHTML=a;
+  $("actHint").textContent=day.act?(day.act+"："+ACT[day.act-1]):"";
+  $("comment").value=day.cm||"";
+}
+$("mood").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.mood=(String(d.mood)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderOverview();});
+$("act").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.act=(String(d.act)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderOverview();});
+$("comment").addEventListener("input",function(){S.days[cur].cm=this.value;save();renderOverview();});
+$("prev").addEventListener("click",function(){if(cur>0){cur--;renderAll();}});
+$("next").addEventListener("click",function(){if(cur<13){cur++;renderAll();}});
+$("name").value=S.name||""; $("start").value=S.start||"";
+$("name").addEventListener("input",function(){S.name=this.value;save();});
+$("start").addEventListener("change",function(){S.start=this.value;save();renderAll();});
+
+/* overview */
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function renderOverview(){
+  var h='<thead><tr><th>月/日（曜）</th>';
+  HOURS.forEach(function(hr){h+='<th class="'+(NIGHT[hr]?"n":"")+'">'+hr+'</th>';});
+  h+='<th>気分</th><th>活動度</th><th>コメント</th></tr></thead><tbody>';
+  for(var i=0;i<14;i++){
+    var d=S.days[i];
+    h+='<tr class="'+(i===cur?"sel":"")+'"><td class="dt" data-i="'+i+'" style="cursor:pointer">'+label(i)+'</td>';
+    for(var x=0;x<24;x++){var v=d.a[x];h+='<td class="hc" data-i="'+i+'" style="background:'+(v?COLOR[v]:"#fff")+'">'+(v||"")+(d.s[x]?'<i>★</i>':'')+'</td>';}
+    h+='<td>'+(d.mood||"")+'</td><td>'+(d.act||"")+'</td><td class="cm" title="'+esc(d.cm||"")+'">'+esc(d.cm||"")+'</td></tr>';
+    if(i===6) h+='<tr><td colspan="28" style="height:4px;background:#DDE2E8"></td></tr>';
+  }
+  $("ov").innerHTML=h+'</tbody>';
+}
+$("ov").addEventListener("click",function(e){var t=e.target.closest("[data-i]");if(!t)return;cur=+t.dataset.i;renderAll();$("editor").scrollIntoView({block:"start",behavior:"smooth"});});
+
+function renderAll(){renderDays();renderHours();renderSeg();renderOverview();}
+
+/* ---------- export ---------- */
+function fileBase(){
+  var nm=(S.name||"").replace(/[\\\/:*?"<>|\s]/g,"");
+  var d=new Date(), ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
+  return "生活記録表_"+(nm?nm+"_":"")+ymd;
+}
+function status(t){$("status").textContent=t;}
+function drawCanvas(){
+  var W=2000,cellW=52,dateW=150,moodW=60,actW=70,left=30,top=0;
+  var cmW=W-left*2-dateW-cellW*24-moodW-actW;
+  var rowH=54, headH=56;
+  var H=200+headH*2+rowH*14+30+150;
+  var cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  var g=cv.getContext("2d"), F='"BIZ UDPGothic","Hiragino Sans","Meiryo","Noto Sans JP",sans-serif';
+  g.fillStyle="#fff"; g.fillRect(0,0,W,H);
+  g.fillStyle="#1F2933"; g.textBaseline="middle";
+  g.font="bold 44px "+F; g.fillText("生活記録表（2週間）",left,50);
+  g.font="28px "+F;
+  var period=S.start?(label(0)+" 〜 "+label(13)):"記録開始日：未入力";
+  g.fillText("氏名："+(S.name||"（未入力）")+"　　期間："+period,left,105);
+  // legend
+  var lx=left, ly=155; g.font="24px "+F;
+  CODES.concat([{k:"★",n:"服薬",c:null}]).forEach(function(x){
+    g.fillStyle=x.c||"#fff"; g.fillRect(lx,ly-18,36,36); g.strokeStyle="#7B8794"; g.lineWidth=1.5; g.strokeRect(lx,ly-18,36,36);
+    g.fillStyle=x.c?"#1F2933":"#C00000"; g.font="bold 24px "+F; g.textAlign="center"; g.fillText(x.k,lx+18,ly+1);
+    g.textAlign="left"; g.fillStyle="#1F2933"; g.font="24px "+F; g.fillText(x.n,lx+44,ly+1); lx+=150;
+  });
+  top=200;
+  function header(y){
+    g.fillStyle="#EEF1F4"; g.fillRect(left,y,W-left*2,headH);
+    g.fillStyle="#1F2933"; g.font="bold 24px "+F; g.textAlign="center";
+    g.fillText("月/日（曜）",left+dateW/2,y+headH/2);
+    HOURS.forEach(function(hr,x){var cx=left+dateW+x*cellW; if(NIGHT[hr]){g.fillStyle="#DDE2E8";g.fillRect(cx,y,cellW,headH);} g.fillStyle="#1F2933"; g.fillText(String(hr),cx+cellW/2,y+headH/2);});
+    var bx=left+dateW+cellW*24;
+    g.fillText("気分",bx+moodW/2,y+headH/2); g.fillText("活動度",bx+moodW+actW/2,y+headH/2); g.fillText("コメント（体調・出来事など）",bx+moodW+actW+cmW/2,y+headH/2);
+    g.textAlign="left";
+  }
+  function wrapText(t,x,y,maxW,maxLines,lh){
+    var lines=[],line=""; for(var i=0;i<t.length;i++){var ch=t[i]; if(ch==="\n"){lines.push(line);line="";continue;} if(g.measureText(line+ch).width>maxW){lines.push(line);line=ch;} else line+=ch;} if(line)lines.push(line);
+    if(lines.length>maxLines){lines=lines.slice(0,maxLines); lines[maxLines-1]=lines[maxLines-1].slice(0,-1)+"…";}
+    var y0=y-(lines.length-1)*lh/2; lines.forEach(function(l,k){g.fillText(l,x,y0+k*lh);});
+  }
+  var y=top;
+  for(var w=0;w<2;w++){
+    header(y); y+=headH;
+    for(var r=0;r<7;r++){
+      var i=w*7+r, d=S.days[i];
+      g.strokeStyle="#9AA5B1"; g.lineWidth=1.5;
+      g.fillStyle="#1F2933"; g.font="bold 24px "+F; g.textAlign="center"; g.fillText(label(i),left+dateW/2,y+rowH/2);
+      g.strokeRect(left,y,dateW,rowH);
+      for(var x=0;x<24;x++){
+        var cx=left+dateW+x*cellW, v=d.a[x];
+        g.fillStyle=v?COLOR[v]:"#fff"; g.fillRect(cx,y,cellW,rowH); g.strokeRect(cx,y,cellW,rowH);
+        if(v){g.fillStyle="#1F2933"; g.font="bold 26px "+F; g.fillText(v,cx+cellW/2,y+rowH/2+(d.s[x]?6:0));}
+        if(d.s[x]){g.fillStyle="#C00000"; g.font="bold 22px "+F; g.fillText("★",cx+cellW-13,y+14);}
+      }
+      var bx=left+dateW+cellW*24;
+      g.fillStyle="#1F2933"; g.font="bold 26px "+F;
+      g.strokeRect(bx,y,moodW,rowH); g.fillText(String(d.mood||""),bx+moodW/2,y+rowH/2);
+      g.strokeRect(bx+moodW,y,actW,rowH); g.fillText(String(d.act||""),bx+moodW+actW/2,y+rowH/2);
+      g.strokeRect(bx+moodW+actW,y,cmW,rowH);
+      g.textAlign="left"; g.font="20px "+F; wrapText(d.cm||"",bx+moodW+actW+8,y+rowH/2,cmW-16,2,24);
+      y+=rowH;
+    }
+    y+=15;
+  }
+  g.textAlign="left"; g.fillStyle="#1F2933"; g.font="22px "+F;
+  g.fillText("気分　5 とても良い　4 良い　3 ふつう　2 悪い　1 とても悪い",left,y+20);
+  g.font="20px "+F;
+  g.fillText("活動度　1 何もする意欲が無く、家で横になっていることが多い　2 家の中でゆっくりと安心してすごせる　3 簡単な家事など、家のことがふつうにできる",left,y+58);
+  g.fillText("　　　　4 短時間の外出などできるが、疲れが翌日に残る　5 毎日、短時間の外出などができる　6 （平日は）どこかに通い、何とか課題に取り組める　7 （平日は）どこかに通い、集中して課題に取り組める",left,y+90);
+  return cv;
+}
+function toBlob(cv){return new Promise(function(res){cv.toBlob(function(b){res(b);},"image/png");});}
+function download(blob,name){
+  var url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},4000);
+}
+$("savePng").addEventListener("click",function(){
+  toBlob(drawCanvas()).then(function(b){download(b,fileBase()+".png"); status("画像を保存しました（"+fileBase()+".png）。メールやチャットに添付して送ってください。");});
+});
+/* minimal .xlsx writer (no external library): stored ZIP + SpreadsheetML with colored cells */
+var CRC_T=(function(){var t=[],c;for(var n=0;n<256;n++){c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CRC_T[(c^u[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  var enc=new TextEncoder(),parts=[],central=[],off=0;
+  function u16(v){return [v&255,(v>>>8)&255];} function u32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];}
+  files.forEach(function(f){
+    var name=enc.encode(f.name),data=enc.encode(f.data),crc=crc32(data);
+    var lh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(lh),name,data);
+    var ch=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off));
+    central.push(new Uint8Array(ch),name);
+    off+=lh.length+name.length+data.length;
+  });
+  var csize=central.reduce(function(a,b){return a+b.length;},0);
+  var end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(csize),u32(off),u16(0)));
+  return new Blob(parts.concat(central,[end]),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+function xesc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");}
+function colName(n){var s="";n++;while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}return s;}
+function buildXlsx(){
+  // styles: 0 default, 1 bold, 2 bordered center, 3 header gray, 4.. code fills, last: wrap-left bordered
+  var fills='<fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/></patternFill></fill>';
+  CODES.forEach(function(x){fills+='<fill><patternFill patternType="solid"><fgColor rgb="FF'+x.c.slice(1)+'"/></patternFill></fill>';});
+  var nF=3+CODES.length;
+  var bd='<border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FF9AA5B1"/></left><right style="thin"><color rgb="FF9AA5B1"/></right><top style="thin"><color rgb="FF9AA5B1"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>';
+  var xf='<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'+
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'+
+    '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>';
+  CODES.forEach(function(x,i){xf+='<xf numFmtId="0" fontId="1" fillId="'+(3+i)+'" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>';});
+  var WRAP=4+CODES.length;
+  xf+='<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>';
+  var TITLE=WRAP+1;
+  xf+='<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>';
+  var styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<fonts count="3"><font><sz val="11"/><name val="Meiryo"/></font><font><b/><sz val="11"/><name val="Meiryo"/></font><font><b/><sz val="16"/><name val="Meiryo"/></font></fonts>'+
+    '<fills count="'+nF+'">'+fills+'</fills><borders count="2">'+bd+'</borders>'+
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="'+(TITLE+1)+'">'+xf+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  var codeStyle={}; CODES.forEach(function(x,i){codeStyle[x.k]=4+i;});
+  var rows=[], rn=0;
+  function row(cells,ht){rn++;var h='<row r="'+rn+'"'+(ht?' ht="'+ht+'" customHeight="1"':'')+'>';cells.forEach(function(c,i){if(c==null)return;var ref=colName(i)+rn;var st=c.s||0;if(c.v===""||c.v==null){h+='<c r="'+ref+'" s="'+st+'"/>';}else if(typeof c.v==="number"){h+='<c r="'+ref+'" s="'+st+'"><v>'+c.v+'</v></c>';}else{h+='<c r="'+ref+'" s="'+st+'" t="inlineStr"><is><t xml:space="preserve">'+xesc(c.v)+'</t></is></c>';}});rows.push(h+'</row>');}
+  row([{v:"生活記録表（2週間）",s:TITLE}],26);
+  row([{v:"氏名",s:1},{v:S.name||""}]);
+  row([{v:"期間",s:1},{v:S.start?(label(0)+" 〜 "+label(13)):""}]);
+  rn++;
+  function head(){row([{v:"月/日（曜）",s:3}].concat(HOURS.map(function(h){return {v:h,s:3};})).concat([{v:"気分",s:3},{v:"活動度",s:3},{v:"コメント",s:3}]),24);}
+  for(var w=0;w<2;w++){
+    head();
+    for(var r=0;r<7;r++){var i=w*7+r,d=S.days[i];
+      row([{v:label(i),s:2}].concat(d.a.map(function(v,x){var t=(v||"")+(d.s[x]?"★":"");return {v:t,s:v?codeStyle[v]:2};})).concat([{v:d.mood===""?"":+d.mood,s:2},{v:d.act===""?"":+d.act,s:2},{v:d.cm||"",s:WRAP}]),30);}
+    rn++;
+  }
+  row([{v:"記号："+CODES.map(function(x){return x.k+"＝"+x.n;}).join("　")+"　★＝服薬"}]);
+  row([{v:"気分：5 とても良い　4 良い　3 ふつう　2 悪い　1 とても悪い"}]);
+  [[0,3],[3,5],[5,7]].forEach(function(r,k){row([{v:(k?"　　　　":"活動度：")+ACT.slice(r[0],r[1]).map(function(t,i){return (r[0]+i+1)+" "+t;}).join("　")}]);});
+  var cols='<cols><col min="1" max="1" width="13" customWidth="1"/><col min="2" max="25" width="4.6" customWidth="1"/><col min="26" max="27" width="6.5" customWidth="1"/><col min="28" max="28" width="45" customWidth="1"/></cols>';
+  var sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0"/></sheetViews>'+cols+'<sheetData>'+rows.join("")+'</sheetData><pageMargins left="0.3" right="0.3" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="1"/></worksheet>';
+  return zip([
+    {name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:"xl/workbook.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="生活記録表" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+    {name:"xl/_rels/workbook.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:"xl/styles.xml",data:styles},
+    {name:"xl/worksheets/sheet1.xml",data:sheet}
+  ]);
+}
+$("saveXlsx").addEventListener("click",function(){
+  var b; try{b=buildXlsx();}catch(err){status("Excelの作成に失敗しました。「画像で保存」をお使いください。");return;}
+  download(b,fileBase()+".xlsx"); status("Excelファイルを保存しました（"+fileBase()+".xlsx）。");
+});
+$("share").addEventListener("click",function(){
+  toBlob(drawCanvas()).then(function(b){
+    var f=new File([b],fileBase()+".png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      navigator.share({files:[f],title:"生活記録表"}).then(function(){status("送信アプリを開きました。送り先を確認して送ってください。");}).catch(function(err){ if(err&&err.name==="AbortError") status("共有を取り消しました。"); else {download(b,f.name); status("共有できなかったため、画像を保存しました。各アプリで添付してください。");}});
+    } else { download(b,f.name); status("この端末では共有ボタンが使えないため、画像を保存しました。メールやチャットに添付して送ってください。"); }
+  });
+});
+$("print").addEventListener("click",function(){window.print();});
+$("clear").addEventListener("click",function(){$("confirmBox").hidden=false;});
+$("clearNo").addEventListener("click",function(){$("confirmBox").hidden=true;});
+$("clearYes").addEventListener("click",function(){S=blank();cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;renderAll();status("記入内容を消しました。");});
+
+buildPalette(); renderAll();
+if(!filled(S.days[0])&&!S.name){ try{$("howto").open=true;}catch(e){} }
+})();
+</script>
+</body>
+</html>
