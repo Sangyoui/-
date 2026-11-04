@@ -232,18 +232,21 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
     <div class="panel" id="pMail" hidden>
       <div data-for="share">
         <p><b>次に開く一覧から、使っているメールアプリを選んでください。</b></p>
-        <p class="small">「メール」「Gmail」「Outlook」などを選ぶと、PDFが添付された下書きが開きます。宛先を入れて（または確認して）送信してください。</p>
+        <p class="small">「メール」「Gmail」「Outlook」などを選ぶと、PDFが添付された下書きが開きます。</p>
+        <p class="small"><b>宛先の欄に「<span class="toaddr"></span>」を入れて送信してください。</b>（スマホの仕組み上、宛先は自動では入りません）</p>
+        <div><button class="btn quiet mini" type="button" data-copyto>宛先をコピーする</button></div>
         <button class="btn primary" type="button" id="mailShareAgain">もう一度一覧を開く</button>
       </div>
       <div data-for="pc">
         <p><b>パソコンでの送り方を選んでください。</b></p>
+        <p class="small">メールアプリで送る場合は、開いた下書きの宛先に「<span class="toaddr"></span>」を入れてください（上の「コピー」が使えます）。</p>
         <div class="btns grid">
           <button class="btn primary" type="button" id="pcMailApp">メールアプリで送る<br><small>（Outlook・メールなど）</small></button>
           <button class="btn" type="button" id="pcWebmail">ブラウザのメールで送る<br><small>（Gmail・Yahoo!メールなど）</small></button>
         </div>
       </div>
       <div id="webmailBox" hidden>
-        <p class="small"><b>PDFを保存しました。</b>次の手順で送ってください。</p>
+        <p class="small"><b>PDFを保存しました。</b>次の手順で送ってください。宛先「<span class="toaddr"></span>」は自動で入ります。</p>
         <ol class="plain small" style="padding-left:1.4em">
           <li>使っているメールの作成画面を開きます。<div class="btns" style="margin-top:6px"><a class="btn" id="wGmail" target="_blank" rel="noopener">Gmail</a><a class="btn" id="wYahoo" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener">Yahoo!メール</a><a class="btn" id="wOutlook" target="_blank" rel="noopener">Outlook（ブラウザ）</a></div></li>
           <li>保存したPDF（「ダウンロード」フォルダの「<span class="fname"></span>」）を、作成画面にドラッグするか、クリップ（添付）マークから選びます。</li>
@@ -698,13 +701,15 @@ $("pcMailApp").addEventListener("click",function(){
 $("pcWebmail").addEventListener("click",function(){
   if(savePdf()){ $("webmailBox").hidden=false; toast("PDFを保存しました。メールの作成画面を開いて、PDFを添付してください。",9000); updateWebmail(); }
 });
-function toAddr(){return (S.to||"").trim();}
+var DEFAULT_TO="t-healthcare@sakurajyuji.jp";
+function toAddr(){return (S.to||DEFAULT_TO||"").trim();}
 function updateWebmail(){
   var e=encodeURIComponent, to=toAddr();
   $("wGmail").href="https://mail.google.com/mail/?view=cm&fs=1&to="+e(to)+"&su="+e(subject())+"&body="+e(bodyText());
   $("wOutlook").href="https://outlook.office.com/mail/deeplink/compose?to="+e(to)+"&subject="+e(subject())+"&body="+e(bodyText());
 }
-function updateMail(){ if(!$("wGmail")) return; updateWebmail(); $("toLine").hidden=!toAddr(); $("toShow").textContent=toAddr(); }
+function updateMail(){ if(!$("wGmail")) return; updateWebmail(); $("toLine").hidden=!toAddr(); $("toShow").textContent=toAddr(); document.querySelectorAll(".toaddr").forEach(function(e){e.textContent=toAddr();}); }
+document.addEventListener("click",function(e){ if(e.target.closest("[data-copyto]")) $("toCopy").click(); });
 $("toCopy").addEventListener("click",function(){
   var t=toAddr();
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("送り先のアドレスをコピーしました。宛先の欄に貼り付けてください。");},function(){toast("送り先："+t);});}
