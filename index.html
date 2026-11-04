@@ -4,260 +4,272 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#F3F6F5">
 <title>生活記録表</title>
 <style>
-/* Layout: paper-form feel — one day edited at a time (big cells for fingers), 2-week overview below */
+/* Layout: 3 calm steps (はじめに → 記録する → 確認して送る); one task per screen; fixed bottom bar always shows the next action */
 :root{
-  --bg:#F6F7F9; --paper:#FFFFFF; --ink:#1F2933; --muted:#5B6672; --line:#C9CFD6; --line-strong:#7B8794;
-  --accent:#1E5AA8; --accent-soft:#E3ECF8; --danger:#B42318; --star:#C00000;
-  --c-睡:#8EB4E3; --c-食:#FFE94F; --c-家:#FF9F43; --c-外:#A9D08E; --c-仕:#F4B6D2; --c-趣:#C5A3E0; --c-学:#C8A27A; --c-運:#7FD8E6;
+  --bg:#F3F6F5; --paper:#FFFFFF; --ink:#2E3D45; --muted:#5E6E76; --line:#D3DCDA; --line-strong:#8FA0A6;
+  --accent:#3C7A89; --accent-ink:#FFFFFF; --accent-soft:#E4F0F1; --ok:#3F8A5C; --ok-soft:#E5F3EA; --warm:#FFF7E8; --star:#C0392B;
   --font:"BIZ UDPGothic","BIZ UDPゴシック","Hiragino Sans","Hiragino Kaku Gothic ProN","Meiryo","Noto Sans JP","Noto Sans CJK JP",sans-serif;
+  --barH:76px;
   color-scheme:light;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.6;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px}
-.wrap{max-width:1100px;margin:0 auto;display:grid;gap:16px}
-h1{font-size:1.6rem;margin:0;letter-spacing:.02em}
-h2{font-size:1.15rem;margin:0 0 8px;display:flex;align-items:center;gap:8px}
-h2::before{content:"";width:6px;height:1.1em;background:var(--accent);border-radius:2px}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
-.lead{margin:4px 0 0;color:var(--muted)}
-.row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
-label.f{display:grid;gap:4px;font-weight:700}
-input[type=text],input[type=date],select,textarea{font:inherit;font-size:18px;padding:10px 12px;border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);min-height:48px}
-input[type=text]{width:min(320px,100%)}
-textarea{width:100%;min-height:72px;resize:vertical}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(var(--barH) + 70px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:820px;margin:0 auto;display:grid;gap:16px}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.note{font-size:.95rem;color:var(--muted)}
-details summary{cursor:pointer;font-weight:700;font-size:1.05rem;padding:4px 0}
-details[open] summary{margin-bottom:8px}
-ol.how{margin:0;padding-left:1.4em;display:grid;gap:4px}
-.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 16px;margin-top:8px}
-.legend div{display:flex;gap:8px;align-items:center}
-.chip{display:inline-grid;place-items:center;width:2em;height:2em;border:1px solid var(--line-strong);border-radius:6px;font-weight:700;flex:none}
-.scale{display:grid;gap:2px;margin:6px 0 0;padding-left:0;list-style:none}
-.scale b{display:inline-block;width:1.6em}
+h1{font-size:1.25rem;margin:0}
+h2{font-size:1.3rem;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
 
-/* tool palette */
-.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;box-shadow:0 2px 8px rgba(31,41,51,.08)}
-.tools .t-label{font-size:.9rem;color:var(--muted)}
-.palette{display:flex;flex-wrap:wrap;gap:6px}
-.tool{font:inherit;display:flex;align-items:center;gap:4px;border:2px solid var(--line-strong);border-radius:8px;background:#fff;padding:4px 10px 4px 4px;min-height:48px;cursor:pointer;color:var(--ink)}
-.tool .sw{display:grid;place-items:center;width:36px;height:36px;border-radius:6px;font-weight:700;font-size:20px}
-.tool .nm{font-size:.95rem}
-.tool[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--ink) inset;background:var(--accent-soft)}
+/* top: title + steps */
+.top{position:sticky;top:0;z-index:10;background:var(--bg);padding-top:max(10px,env(safe-area-inset-top,0px));padding-bottom:8px;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line)}
+.top-in{max-width:820px;margin:0 auto;display:grid;gap:6px}
+.top-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.saved{font-size:.85rem;color:var(--ok);white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;list-style:none;margin:0;padding:0}
+.steps button{font:inherit;width:100%;border:none;background:#E3EAE8;color:var(--muted);border-radius:999px;padding:6px 4px;font-size:.92rem;font-weight:700;cursor:pointer;min-height:40px}
+.steps button[aria-current="step"]{background:var(--accent);color:var(--accent-ink)}
+.steps button.done{background:var(--ok-soft);color:var(--ok)}
 
-/* day selector */
-.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-.day-btn{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:6px 2px;cursor:pointer;display:grid;justify-items:center;line-height:1.25;min-height:56px;color:var(--ink)}
-.day-btn .d{font-weight:700;font-size:1.15rem}
-.day-btn .w{font-size:.85rem;color:var(--muted)}
-.day-btn .bar{width:80%;height:5px;border-radius:3px;background:#E7EAEE;margin-top:3px;overflow:hidden}
-.day-btn .bar i{display:block;height:100%;background:var(--accent)}
-.day-btn[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--accent-soft)}
-.wk{font-size:.9rem;color:var(--muted);margin:2px 0}
-
-/* hour grid (one day) */
-.dayhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.dayhead .ttl{font-size:1.3rem;font-weight:700}
-.nav{display:flex;gap:8px}
-.btn{font:inherit;font-weight:700;border:1.5px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;min-height:48px;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.danger{color:var(--danger);border-color:var(--danger)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;min-width:0}
+.card.soft{background:var(--accent-soft);border-color:#C9DEE1}
+.card.warm{background:var(--warm);border-color:#F0DFC0}
+label.f{display:grid;gap:6px;font-weight:700}
+input[type=text],input[type=date],textarea{font:inherit;font-size:18px;padding:12px 14px;border:1.5px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink);min-height:52px;width:100%}
+textarea{min-height:96px;resize:vertical}
+ul.plain{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.btn{font:inherit;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:12px;padding:10px 16px;min-height:52px;cursor:pointer;text-decoration:none;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.quiet{border-color:var(--line)}
 .btn:disabled{opacity:.4;cursor:default}
-.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:10px;touch-action:none;user-select:none;-webkit-user-select:none}
-@media (min-width:760px){.hours{grid-template-columns:repeat(12,minmax(0,1fr))}}
-.cell{border:1.5px solid var(--line-strong);border-radius:6px;background:#fff;min-height:58px;display:grid;grid-template-rows:auto 1fr;padding:2px 3px;cursor:pointer;position:relative}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btns.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+/* step 2 */
+.daystrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{font:inherit;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 2px;cursor:pointer;display:grid;justify-items:center;line-height:1.2;min-height:62px;color:var(--ink)}
+.day .d{font-weight:700;font-size:1.15rem}
+.day .w{font-size:.85rem;color:var(--muted)}
+.day .m{font-size:.8rem;height:1em;color:var(--ok);font-weight:700}
+.day[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--accent-soft)}
+.dayttl{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dayttl b{font-size:1.35rem}
+.palette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.tool{font:inherit;display:grid;justify-items:center;gap:0;border:2px solid var(--line);border-radius:12px;background:#fff;padding:4px 2px;min-height:60px;cursor:pointer;color:var(--ink)}
+.tool .sw{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;font-weight:700;font-size:19px}
+.tool .nm{font-size:.78rem;line-height:1.2}
+.tool[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;touch-action:none;user-select:none;-webkit-user-select:none}
+@media (min-width:700px){.hours{grid-template-columns:repeat(12,minmax(0,1fr))}.palette{grid-template-columns:repeat(10,minmax(0,1fr))}}
+.cell{border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;min-height:56px;display:grid;grid-template-rows:auto 1fr;padding:2px 4px;cursor:pointer;position:relative}
 .cell .h{font-size:.8rem;color:var(--muted);line-height:1.1}
-.cell.night .h{font-weight:700;color:var(--ink)}
-.cell.night{background-image:linear-gradient(#EEF0F4,#EEF0F4);background-size:100% 16px;background-repeat:no-repeat}
-.cell .v{display:grid;place-items:center;font-size:22px;font-weight:700}
-.cell .s{position:absolute;right:3px;top:0;color:var(--star);font-size:18px;font-weight:700}
-.sub{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg button{font:inherit;font-weight:700;min-width:48px;min-height:48px;border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;cursor:pointer;color:var(--ink)}
+.cell.night{background-image:linear-gradient(#EDF1F0,#EDF1F0);background-size:100% 15px;background-repeat:no-repeat}
+.cell .v{display:grid;place-items:center;font-size:21px;font-weight:700}
+.cell .s{position:absolute;right:3px;top:-1px;color:var(--star);font-size:17px;font-weight:700}
+.seg{display:grid;gap:6px}
+.seg.mood{grid-template-columns:repeat(5,minmax(0,1fr))}
+.seg.act{grid-template-columns:repeat(7,minmax(0,1fr))}
+.seg button{font:inherit;font-weight:700;min-height:56px;border:1.5px solid var(--line-strong);border-radius:10px;background:#fff;cursor:pointer;color:var(--ink);display:grid;place-items:center;line-height:1.15;padding:4px 2px}
+.seg button small{font-weight:400;font-size:.7rem;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.hint{font-size:.85rem;color:var(--muted);margin-top:2px}
+.seg button[aria-pressed="true"] small{color:#fff}
+.acthint{min-height:1.6em;font-size:.92rem;color:var(--muted)}
+details.help summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 14px;margin-top:8px;font-size:.92rem}
+.legend div{display:flex;gap:8px;align-items:center}
+.chip{display:inline-grid;place-items:center;width:1.9em;height:1.9em;border:1px solid var(--line-strong);border-radius:6px;font-weight:700;flex:none}
 
-/* overview */
-.ov-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
-table.ov{border-collapse:collapse;font-size:.85rem;min-width:820px;width:100%}
-.ov th,.ov td{border:1px solid var(--line);text-align:center;padding:0;height:28px}
-.ov th{background:#EEF1F4;font-weight:700}
-.ov th.n{background:#DDE2E8}
-.ov td.dt{white-space:nowrap;padding:0 6px;font-weight:700;background:#fff;position:sticky;left:0}
-.ov td.hc{width:26px;font-weight:700;cursor:pointer;white-space:nowrap;position:relative}
+/* step 3 */
+.ov-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
+.ov th,.ov td{border:1px solid var(--line);text-align:center;padding:0;height:30px}
+.ov th{background:#EEF3F2}
+.ov td.dt{white-space:nowrap;padding:0 6px;font-weight:700;background:#fff;position:sticky;left:0;cursor:pointer}
+.ov td.hc{width:24px;font-weight:700;white-space:nowrap;position:relative}
 .ov td.hc i{position:absolute;right:0;top:-3px;font-style:normal;font-size:.75em;color:var(--star)}
-.ov td.cm{text-align:left;padding:0 6px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ov tr.sel td.dt{background:var(--accent-soft)}
+.ov td.cm{text-align:left;padding:0 6px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{display:flex;align-items:center;gap:10px}
+.prog .bar{flex:1;height:10px;border-radius:5px;background:#E3EAE8;overflow:hidden}
+.prog .bar i{display:block;height:100%;background:var(--ok)}
+.way{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.way h3{margin:0;font-size:1.08rem}
+.cprow{display:grid;grid-template-columns:3em minmax(0,1fr);gap:6px 8px;align-items:start}
+.cprow span{font-weight:700;padding-top:12px}
+.cprow .btn{grid-column:2;justify-self:start;min-height:44px}
+.cprow textarea{min-height:160px;font-size:15px}
+.cprow input{font-size:16px}
+.danger{color:#9B3D33;border-color:#C9A39D}
+.confirm{border:1.5px solid #C9A39D;border-radius:10px;padding:12px;background:#FBF1EF;display:grid;gap:8px}
 
-.actions{display:flex;flex-wrap:wrap;gap:10px}
-.status{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;max-width:760px;margin:0 auto;background:var(--ink);color:#fff;font-weight:700;padding:12px 16px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
-.status:empty{display:none}
-.confirm{border:1.5px solid var(--danger);border-radius:8px;padding:12px;background:#FFF5F4;display:grid;gap:8px}
-.sendblock{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:12px;display:grid;gap:8px}
-.sendblock h3{margin:0;font-size:1.05rem}
-ol.steps{margin:0;padding-left:1.6em;display:grid;gap:12px}
-ol.steps li::marker{font-weight:700;color:var(--accent)}
-ol.steps .actions{margin-top:6px}
-a.btn{display:inline-flex;align-items:center;text-decoration:none}
-.copybox summary{font-size:1rem}
-.cprow{display:grid;grid-template-columns:3em minmax(0,1fr) auto;gap:8px;align-items:start;margin-top:8px}
-.cprow span{font-weight:700;padding-top:10px}
-.cprow input,.cprow textarea{width:100%;font-size:16px}
-footer{font-size:.85rem;color:var(--muted);text-align:center}
-@media (max-width:480px){
-  body{font-size:16px}
-  .days{gap:4px}
-  .day-btn{min-height:52px}
-  .tool .nm{display:none}
-  .tool{padding:4px}
-  .cell{min-height:54px}
-}
+/* bottom bar + scroll cue + toast */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -4px 14px rgba(46,61,69,.08)}
+.bar-in{max-width:820px;margin:0 auto;display:flex;gap:10px}
+.bar .btn{flex:1;min-height:56px;font-size:1.02rem}
+.bar .btn.back{flex:0 0 auto;min-width:96px}
+.cue{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--barH) + 14px + env(safe-area-inset-bottom,0px));z-index:14;font:inherit;font-weight:700;font-size:.95rem;background:var(--ink);color:#fff;border:none;border-radius:999px;padding:9px 18px;box-shadow:0 4px 14px rgba(0,0,0,.2);cursor:pointer;white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){.cue{animation:bob 1.6s ease-in-out infinite}@keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,4px)}}}
+.toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 96px);z-index:20;max-width:720px;margin:0 auto;background:var(--ink);color:#fff;font-weight:700;padding:12px 16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast:empty{display:none}
+@media (max-width:420px){body{font-size:17px}.card{padding:14px}.tool .nm{font-size:.72rem}.seg button small{font-size:.62rem}}
 @media print{
-  body{background:#fff;padding:0;font-size:11pt}
-  .tools,.editor,.actions,.no-print,details,.days,.status{display:none!important}
-  .panel{border:none;padding:0}
+  .top,.bar,.cue,.toast,.noprint{display:none!important}
+  body{background:#fff;padding:0;font-size:10pt}
+  .card{border:none;padding:0}
   .ov-wrap{overflow:visible;border:none}
   table.ov{min-width:0;font-size:8pt}
   @page{size:A4 landscape;margin:8mm}
 }
-@media (prefers-reduced-motion:no-preference){.tool,.day-btn,.btn{transition:background-color .12s,box-shadow .12s}}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<header class="panel">
-  <h1>生活記録表（2週間）</h1>
-  <p class="lead">この記録は、生活リズム（睡眠・日中の活動・気分）や体調の変化を確認し、今後の過ごし方や働き方を面談で一緒に考えるためのものです。正確さよりも、毎日続けることが大切です。おおよそで構いません。</p>
-  <div class="row" style="margin-top:12px">
-    <label class="f" for="name">氏名<input type="text" id="name" autocomplete="name" placeholder="例：山田 太郎"></label>
-    <label class="f" for="start">記録開始日<input type="date" id="start"></label>
+<header class="top">
+  <div class="top-in">
+    <div class="top-row"><h1>生活記録表（1週間）</h1><span class="saved" id="saved" aria-live="polite"></span></div>
+    <ol class="steps" aria-label="進み具合">
+      <li><button type="button" data-step="1">① はじめに</button></li>
+      <li><button type="button" data-step="2">② 記録する</button></li>
+      <li><button type="button" data-step="3">③ 送る</button></li>
+    </ol>
   </div>
-  <p class="note" style="margin:8px 0 0">🔒 入力した内容は、お使いの端末（このブラウザ）の中だけに保存され、インターネット上には送信されません。ログインも不要です。</p>
 </header>
 
-<section class="panel no-print">
-  <details id="howto">
-    <summary>記入のしかた（はじめにお読みください）</summary>
-    <ol class="how">
-      <li>「記録開始日」を選ぶと、14日分の日付と曜日が入ります。</li>
-      <li>画面上の記号（睡・食など）を選んでから、時間のマスをタップします。<b>指やマウスでなぞると、最初のマスから指を離したマスまでまとめて塗れます</b>（例：23時のマスから3時のマスまでなぞる）。</li>
-      <li>薬を飲んだ時間は「★」を選んでマスをタップします（記号と一緒に付けられます）。消すときは「消す」を選んでタップします。</li>
-      <li>1日の終わりに、気分（1〜5）と活動度（1〜7）を選び、体調や出来事をコメント欄に書きます。</li>
-      <li>入力した内容は自動で端末に保存されるので、毎日続きから記入できます。</li>
-      <li>2週間分が終わったら、下の「保存・提出」から送ってください。スマホはアプリを選んで送れます。パソコンやブラウザのメール（Gmail・Outlook・Yahoo!メールなど）でも送れます。</li>
-    </ol>
-    <p class="note">※ 1マス＝1時間です（朝4時から翌朝4時まで）。何も入れていない時間は「特に何もしていない・テレビなど」として扱います。</p>
-    <div class="legend" id="legend"></div>
-    <div class="sub">
-      <div><b>気分（1〜5）</b><ul class="scale"><li><b>5</b>とても良い</li><li><b>4</b>良い</li><li><b>3</b>ふつう</li><li><b>2</b>悪い</li><li><b>1</b>とても悪い</li></ul></div>
-      <div><b>活動度（1〜7）</b>：その日の様子にいちばん近いもの<ul class="scale" id="actScale"></ul></div>
+<main class="wrap" style="margin-top:14px">
+
+<!-- ========== STEP 1 ========== -->
+<section id="step1" class="step" aria-labelledby="s1h">
+  <div class="card">
+    <h2 id="s1h">はじめに</h2>
+    <p>1週間の生活リズム（睡眠・日中の過ごし方・気分）を記録して、面談で一緒にふり返るためのものです。</p>
+    <p><b>正確でなくて大丈夫です。</b>おおよそで、書ける日だけでも構いません。</p>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <label class="f" for="name">お名前<input type="text" id="name" autocomplete="name" placeholder="例：山田 太郎"></label>
+    <label class="f" for="start">記録をはじめる日<input type="date" id="start"></label>
+    <p class="small muted">はじめる日を選ぶと、7日分の日付と曜日が入ります。</p>
+  </div>
+  <div class="card soft" style="margin-top:16px">
+    <h2 style="font-size:1.1rem">入力した内容の保存について</h2>
+    <ul class="plain">
+      <li>入力した内容は、<b>この端末のブラウザに自動で保存</b>されます。保存ボタンはありません。</li>
+      <li>ブラウザを閉じても、<b>同じ端末・同じブラウザ</b>でこのページを開けば、続きから入力できます。</li>
+      <li>別のスマホやパソコン、別のブラウザで開くと、続きは表示されません。毎日同じ方法で開いてください（ブックマークやホーム画面への追加が便利です）。</li>
+      <li>プライベートブラウズ（シークレットモード）では保存されません。閲覧履歴やWebサイトのデータを消すと、記録も消えます。</li>
+      <li>入力した内容はインターネットには送られず、ご本人が「送る」まで誰にも見えません。ログインも不要です。</li>
+    </ul>
+  </div>
+  <div class="card warm" id="inapp" hidden style="margin-top:16px">
+    <p><b>LINEなどのアプリの中でこのページを開いています。</b></p>
+    <p>このままだと、続きが保存されないことがあります。画面右上（または右下）のメニューから「<b>ブラウザで開く</b>」「<b>Safariで開く</b>」を選んでから入力してください。</p>
+  </div>
+</section>
+
+<!-- ========== STEP 2 ========== -->
+<section id="step2" class="step" aria-labelledby="s2h" hidden>
+  <h2 id="s2h" class="noprint" style="position:absolute;left:-9999px">記録する</h2>
+  <div class="card">
+    <div class="daystrip" id="days" aria-label="日を選ぶ"></div>
+    <div class="dayttl"><b id="dayTitle"></b><span class="small muted" id="dayCount"></span></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <p style="font-weight:700">1. その時間にしていたことを入れる</p>
+    <p class="small muted">記号を選んでから、時間のマスをタップします。なぞると、最初のマスから指を離したマスまでまとめて入ります。</p>
+    <div class="palette" id="palette" role="toolbar" aria-label="記号を選ぶ"></div>
+    <div class="hours" id="hours" aria-label="時間のマス（左上の数字は時刻）"></div>
+    <p class="small muted">マスの左上の数字は時刻です（例：「4」＝4時台）。空いている時間は「特に何もしていない・テレビなど」として扱います。</p>
+    <details class="help"><summary>記号の意味を見る</summary><div class="legend" id="legend"></div></details>
+  </div>
+  <div class="card" style="margin-top:16px" id="moodCard">
+    <p style="font-weight:700">2. 今日の気分</p>
+    <div class="seg mood" id="mood"></div>
+    <p style="font-weight:700;margin-top:6px">3. 今日の活動度</p>
+    <div class="seg act" id="act"></div>
+    <p class="acthint" id="actHint"></p>
+    <details class="help"><summary>活動度の目安を見る</summary><ul class="plain small" id="actScale" style="margin-top:6px"></ul></details>
+    <label class="f" for="comment" style="margin-top:6px">4. ひとこと（体調・出来事など。書かなくても大丈夫です）<textarea id="comment" placeholder="例：夜中に目が覚めた。午後に少し散歩した。"></textarea></label>
+  </div>
+</section>
+
+<!-- ========== STEP 3 ========== -->
+<section id="step3" class="step" aria-labelledby="s3h" hidden>
+  <div class="card">
+    <h2 id="s3h">確認して送る</h2>
+    <div class="prog"><div class="bar"><i id="progBar"></i></div><b id="progTxt"></b></div>
+    <p class="small muted" id="progNote"></p>
+    <div class="ov-wrap"><table class="ov" id="ov"></table></div>
+    <p class="small muted">日付を押すと、その日の記録を直せます。スマホでは表を横にスクロールできます。</p>
+  </div>
+
+  <div class="card" style="margin-top:16px" id="sendCard">
+    <h2 style="font-size:1.15rem">送り方を選んでください</h2>
+
+    <div class="way" id="wayShare" hidden>
+      <h3>スマホのアプリで送る（かんたん）</h3>
+      <p class="small">LINE・Gmail・メール・Teams・Slack・Chatworkなどを選ぶと、<b>記録の画像が添付された状態</b>で開きます。</p>
+      <button class="btn primary" id="share" type="button">アプリを選んで送る</button>
     </div>
-  </details>
-</section>
 
-<div class="tools no-print" role="toolbar" aria-label="記号を選ぶ">
-  <div class="t-label">① 記号を選ぶ → ② マスをタップ／なぞる</div>
-  <div class="palette" id="palette"></div>
-</div>
-
-<section class="panel editor">
-  <div class="wk" id="days1lbl">1週目</div>
-  <div class="days" id="days1"></div>
-  <div class="wk" style="margin-top:6px" id="days2lbl">2週目</div>
-  <div class="days" id="days2"></div>
-</section>
-
-<section class="panel editor" id="editor">
-  <div class="dayhead">
-    <div class="ttl" id="dayTitle">1日目</div>
-    <div class="nav">
-      <button class="btn" id="prev" type="button">← 前の日</button>
-      <button class="btn" id="next" type="button">次の日 →</button>
-    </div>
-  </div>
-  <div class="hours" id="hours" aria-label="時間のマス"></div>
-  <div class="hint">マスの左上の数字は時刻です（例：「4」＝4時台）。</div>
-  <div class="sub">
-    <div><b>気分</b>（5 とても良い〜1 とても悪い）<div class="seg" id="mood"></div></div>
-    <div><b>活動度</b>（1〜7）<div class="seg" id="act"></div><div class="hint" id="actHint"></div></div>
-  </div>
-  <label class="f" for="comment" style="margin-top:12px">コメント（体調・出来事など）<textarea id="comment" placeholder="例：夜中2時に目が覚めた。午後に散歩した。"></textarea></label>
-</section>
-
-<section class="panel">
-  <h2>2週間の一覧</h2>
-  <p class="note no-print" style="margin:0 0 8px">日付をタップすると、その日の入力画面に移ります。スマホでは横にスクロールできます。</p>
-  <div class="ov-wrap"><table class="ov" id="ov"></table></div>
-</section>
-
-<section class="panel no-print">
-  <h2>保存・提出</h2>
-  <div class="status" id="status" role="status" aria-live="polite"></div>
-
-  <div class="sendblock" id="shareBlock" hidden>
-    <h3>スマホのアプリで送る（いちばん簡単）</h3>
-    <button class="btn primary" id="share" type="button">アプリを選んで送る</button>
-    <p class="note">LINE・Gmailアプリ・Teams・Slack・Chatwork・メールなど、送りたいアプリを選ぶと画像が添付された状態で開きます。</p>
-  </div>
-
-  <div class="sendblock">
-    <h3>メールで送る（パソコン・スマホのブラウザのメールでも可）</h3>
-    <label class="f" for="mailTo">送り先のメールアドレス（わかる場合）<input type="text" id="mailTo" inputmode="email" autocomplete="off" placeholder="例：sangyoui@example.com"></label>
-    <ol class="steps">
-      <li><b>画像を保存する</b>
-        <div class="actions"><button class="btn primary" id="savePng" type="button">画像で保存</button><button class="btn" id="saveXlsx" type="button">Excelで保存</button></div>
-        <div class="hint">パソコンは「ダウンロード」フォルダ、スマホは「ファイル」アプリや写真に保存されます。</div>
-      </li>
-      <li><b>使っているメールを選ぶ</b>（件名と本文が入った作成画面が開きます）
-        <div class="actions mailbtns">
-          <a class="btn" id="mGmail" target="_blank" rel="noopener">Gmail</a>
-          <a class="btn" id="mO365" target="_blank" rel="noopener">Outlook（会社・学校）</a>
-          <a class="btn" id="mOutlook" target="_blank" rel="noopener">Outlook.com（個人）</a>
-          <a class="btn" id="mYahoo" target="_blank" rel="noopener">Yahoo!メール</a>
-          <a class="btn" id="mApp">パソコン・スマホのメールアプリ</a>
+    <div class="way">
+      <h3>メールで送る（パソコン・スマホ）</h3>
+      <p class="small"><b>記録の内容はメール本文に入ります。</b>添付をしなくても、そのまま送信すれば届きます。</p>
+      <label class="f" for="mailTo">送り先のメールアドレス（わかる場合）<input type="text" id="mailTo" inputmode="email" autocomplete="off" placeholder="例：sangyoui@example.com"></label>
+      <p class="small" style="font-weight:700">使っているメールを選んでください</p>
+      <div class="btns grid" id="mailbtns">
+        <a class="btn" id="mGmail" target="_blank" rel="noopener">Gmail</a>
+        <a class="btn" id="mO365" target="_blank" rel="noopener">Outlook（会社・学校）</a>
+        <a class="btn" id="mOutlook" target="_blank" rel="noopener">Outlook.com（個人）</a>
+        <a class="btn" id="mApp">メールアプリ</a>
+      </div>
+      <p class="small muted">Yahoo!メールなど上にないメールの場合は、下の「件名・本文をコピーする」を使ってください。</p>
+      <details class="help" id="copybox">
+        <summary>件名・本文をコピーする（どのメール・チャットでも使えます）</summary>
+        <div style="display:grid;gap:10px;margin-top:10px">
+          <div class="cprow"><span>宛先</span><input type="text" id="cpTo" readonly><button class="btn" type="button" data-copy="cpTo">コピー</button></div>
+          <div class="cprow"><span>件名</span><input type="text" id="cpSubj" readonly><button class="btn" type="button" data-copy="cpSubj">コピー</button></div>
+          <div class="cprow"><span>本文</span><textarea id="cpBody" readonly></textarea><button class="btn" type="button" data-copy="cpBody">コピー</button></div>
+          <a class="btn quiet" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener" style="justify-self:start">Yahoo!メールを開く</a>
         </div>
-        <div class="hint">まだ画像を保存していない場合は、ここを押したときに自動で保存されます。Yahoo!メールなどは、作成画面を開いて下の「件名・本文」をコピーして貼り付けてください。</div>
-      </li>
-      <li><b>保存した画像を添付して送信する</b>
-        <div class="hint">メール作成画面のクリップ（添付）マークを押し、①で保存した画像（ファイル名は「生活記録表_…」）を選んでから送信してください。</div>
-      </li>
-    </ol>
-    <details class="copybox">
-      <summary>宛先・件名・本文をコピーする（どのメール・チャットでも使えます）</summary>
-      <div class="cprow"><span>宛先</span><input type="text" id="cpTo" readonly><button class="btn" type="button" data-copy="cpTo">コピー</button></div>
-      <div class="cprow"><span>件名</span><input type="text" id="cpSubj" readonly><button class="btn" type="button" data-copy="cpSubj">コピー</button></div>
-      <div class="cprow"><span>本文</span><textarea id="cpBody" readonly rows="5"></textarea><button class="btn" type="button" data-copy="cpBody">コピー</button></div>
-    </details>
+      </details>
+    </div>
+
+    <div class="way">
+      <h3>ファイルで保存する（必要な場合）</h3>
+      <p class="small muted">表の形で送りたいときや、チャットで送るときに使います。保存したファイルは、メールやチャットのクリップ（＋）マークから添付できます。</p>
+      <div class="btns"><button class="btn" id="savePng" type="button">画像で保存</button><button class="btn" id="saveXlsx" type="button">Excelで保存</button><button class="btn" id="print" type="button">印刷・PDF（パソコン）</button></div>
+    </div>
+    <p class="small"><b>健康に関わる大切な情報です。</b>送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</p>
   </div>
 
-  <div class="sendblock">
-    <h3>その他</h3>
-    <div class="actions"><button class="btn" id="print" type="button">印刷・PDF（パソコン）</button></div>
-    <p class="note">LINE・Teams・Slack・Chatworkなどのチャットで送る場合は、①の「画像で保存」をしてから、各アプリのクリップ（＋）マークで画像を添付してください。</p>
-  </div>
-  <p class="note" style="margin:8px 0 0"><b>健康に関わる大切な情報です。</b>送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</p>
-  <div style="margin-top:14px;display:grid;gap:8px">
-    <div><button class="btn danger" id="clear" type="button">記入内容をすべて消す</button></div>
+  <div class="card" style="margin-top:16px">
+    <p class="small">送り終わったら、この端末から記録を消しておくと安心です（家族と共用の端末などの場合は特に）。</p>
+    <div><button class="btn danger" id="clear" type="button">記録をすべて消す</button></div>
     <div class="confirm" id="confirmBox" hidden>
-      <div>この端末に保存されている記入内容をすべて消します。元に戻せません。よろしいですか？</div>
-      <div class="actions"><button class="btn danger" id="clearYes" type="button">消す</button><button class="btn" id="clearNo" type="button">やめる</button></div>
+      <div>この端末に保存されている記録をすべて消します。元には戻せません。よろしいですか？</div>
+      <div class="btns"><button class="btn danger" id="clearYes" type="button">消す</button><button class="btn" id="clearNo" type="button">やめる</button></div>
     </div>
-    <div class="note">提出が終わったら消しておくと安心です（家族と共用の端末などの場合は特に）。</div>
   </div>
 </section>
+</main>
 
-<footer>生活記録表 Web版 ｜ データは端末内にのみ保存されます</footer>
-</div>
+<button class="cue" id="cue" type="button" hidden>↓ 下に続きがあります</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<nav class="bar" aria-label="次へ進む"><div class="bar-in">
+  <button class="btn back quiet" id="barBack" type="button">← 戻る</button>
+  <button class="btn primary" id="barNext" type="button">次へ</button>
+</div></nav>
 
 <script>
 (function(){
 "use strict";
+var N=7;
 var CODES=[
   {k:"睡",n:"睡眠",d:"睡眠（夜の睡眠、昼寝・仮眠）",c:"#8EB4E3"},
   {k:"食",n:"食事",d:"食事",c:"#FFE94F"},
@@ -268,104 +280,138 @@ var CODES=[
   {k:"学",n:"学習",d:"学習（勉強・資格の勉強・リワークの課題など）",c:"#C8A27A"},
   {k:"運",n:"運動",d:"運動（ジム・プール・ジョギング・ストレッチなど）",c:"#7FD8E6"}
 ];
-var COLOR={}; CODES.forEach(function(x){COLOR[x.k]=x.c;});
+var COLOR={},NAME={}; CODES.forEach(function(x){COLOR[x.k]=x.c;NAME[x.k]=x.n;});
 var ACT=["何もする意欲が無く、家で横になっていることが多い","家の中でゆっくりと安心してすごせる","簡単な家事など、家のことがふつうにできる","短時間の外出などできるが、疲れが翌日に残る","毎日、短時間の外出などができる","（平日は）どこかに通い、何とか課題に取り組める","（平日は）どこかに通い、集中して課題に取り組める"];
 var MOOD={5:"とても良い",4:"良い",3:"ふつう",2:"悪い",1:"とても悪い"};
 var HOURS=[]; for(var i=0;i<24;i++) HOURS.push((4+i)%24);
 var NIGHT={22:1,23:1,0:1,1:1,2:1,3:1};
 var WD=["日","月","火","水","木","金","土"];
 var KEY="seikatsu-kiroku-v1";
-
-function blank(){var d=[];for(var i=0;i<14;i++)d.push({a:Array(24).fill(""),s:Array(24).fill(false),mood:"",act:"",cm:""});return {name:"",start:"",days:d};}
-var S=blank(), cur=0, tool="睡";
-try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.days&&p.days.length===14) S=p;}}catch(e){}
-var imgDirty=true;
-function save(){imgDirty=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} if(typeof updateMail==="function"&&document.getElementById("mGmail")) updateMail();}
-
 var $=function(id){return document.getElementById(id);};
 
-function dateOf(i){
-  if(!S.start) return null;
-  var p=S.start.split("-"); if(p.length!==3) return null;
-  var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+i); return d;
+function blankDay(){return {a:Array(24).fill(""),s:Array(24).fill(false),mood:"",act:"",cm:""};}
+function blank(){var d=[];for(var i=0;i<N;i++)d.push(blankDay());return {name:"",start:"",days:d,to:"",ts:0,cur:0};}
+var S=blank(), restored=false;
+try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.days&&p.days.length){p.days=p.days.slice(0,N); while(p.days.length<N)p.days.push(blankDay()); S=Object.assign(blank(),p); restored=true;}}}catch(e){}
+var cur=Math.min(Math.max(+S.cur||0,0),N-1), tool="睡", step=1, imgDirty=true;
+
+function hasData(){ if(S.name||S.start) return true; return S.days.some(function(d){return filled(d)>0||d.mood||d.act||d.cm;}); }
+function hhmm(ts){var d=new Date(ts);return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");}
+function save(){
+  imgDirty=true; S.ts=Date.now(); S.cur=cur;
+  var ok=true; try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){ok=false;}
+  $("saved").textContent=ok?"✓ 自動保存 "+hhmm(S.ts):"保存できません（プライベートモード？）";
+  if(ok){$("saved").style.color="";}else{$("saved").style.color="#9B3D33";}
+  updateMail();
 }
-function label(i,withYear){
-  var d=dateOf(i); if(!d) return (i+1)+"日目";
-  return (d.getMonth()+1)+"/"+d.getDate()+"（"+WD[d.getDay()]+"）";
-}
+var tT=null; function toast(t,ms){$("toast").textContent=t;clearTimeout(tT);tT=setTimeout(function(){$("toast").textContent="";},ms||6000);}
+
+function dateOf(i){ if(!S.start) return null; var p=S.start.split("-"); if(p.length!==3) return null; var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+i); return d; }
+function label(i){ var d=dateOf(i); if(!d) return (i+1)+"日目"; return (d.getMonth()+1)+"/"+d.getDate()+"（"+WD[d.getDay()]+"）"; }
 function filled(day){var n=0;for(var i=0;i<24;i++) if(day.a[i]||day.s[i]) n++; return n;}
+function dayDone(d){return filled(d)>0||d.mood!==""||d.act!=="";}
 
-/* legend & scales */
+/* ---------- steps ---------- */
+function go(n,opts){
+  step=n;
+  [1,2,3].forEach(function(k){$("step"+k).hidden=(k!==n);});
+  document.querySelectorAll(".steps button").forEach(function(b){
+    var k=+b.dataset.step; b.setAttribute("aria-current",k===n?"step":"false"); b.classList.toggle("done",k<n);
+  });
+  if(n===2) renderDay();
+  if(n===3){renderOverview();updateMail();}
+  renderBar();
+  if(!(opts&&opts.keepScroll)) window.scrollTo(0,0);
+  setTimeout(updateCue,60);
+}
+document.querySelector(".steps").addEventListener("click",function(e){var b=e.target.closest("button");if(b)go(+b.dataset.step);});
+function renderBar(){
+  var back=$("barBack"), next=$("barNext");
+  if(step===1){ back.hidden=true; next.textContent=hasData()&&filled(S.days[0])?"記録のつづきへ →":"記録をはじめる →"; }
+  else if(step===2){ back.hidden=false; back.textContent=cur===0?"← はじめに":"← 前の日"; next.textContent=cur<N-1?"次の日（"+label(cur+1)+"）→":"確認して送る →"; }
+  else { back.hidden=false; back.textContent="← 記録に戻る"; next.textContent="送り方を選ぶ ↓"; }
+}
+$("barNext").addEventListener("click",function(){
+  if(step===1){ go(2); }
+  else if(step===2){ if(cur<N-1){cur++;save();go(2);} else go(3); }
+  else { $("sendCard").scrollIntoView({block:"start"}); window.scrollBy(0,-110); }
+});
+$("barBack").addEventListener("click",function(){
+  if(step===2){ if(cur>0){cur--;save();go(2);} else go(1); }
+  else if(step===3){ go(2); }
+});
+
+/* scroll cue */
+function updateCue(){
+  var rest=document.documentElement.scrollHeight-(window.scrollY+window.innerHeight);
+  $("cue").hidden=!(rest>120 && window.scrollY<60);
+}
+window.addEventListener("scroll",updateCue,{passive:true});
+window.addEventListener("resize",updateCue);
+$("cue").addEventListener("click",function(){window.scrollBy({top:Math.round(window.innerHeight*0.6),behavior:"smooth"});});
+
+/* ---------- step 1 ---------- */
+$("name").value=S.name||""; $("start").value=S.start||"";
+$("name").addEventListener("input",function(){S.name=this.value;save();});
+$("start").addEventListener("change",function(){S.start=this.value;save();renderBar();});
+(function(){var ua=navigator.userAgent||""; if(/Line\/|FBAN|FBAV|Instagram|MicroMessenger|KAKAOTALK/i.test(ua)) $("inapp").hidden=false;})();
+
+/* ---------- step 2 ---------- */
 (function(){
-  var lg=$("legend"),h="";
-  CODES.forEach(function(x){h+='<div><span class="chip" style="background:'+x.c+'">'+x.k+'</span>'+x.d+'</div>';});
-  h+='<div><span class="chip" style="color:var(--star)">★</span>薬を飲んだ（他の記号と一緒に付けられます）</div>';
-  lg.innerHTML=h;
-  var sc="";ACT.forEach(function(t,i){sc+="<li><b>"+(i+1)+"</b>"+t+"</li>";}); $("actScale").innerHTML=sc;
-})();
-
-/* palette */
-function buildPalette(){
   var h="";
   CODES.forEach(function(x){h+='<button type="button" class="tool" data-tool="'+x.k+'" aria-pressed="false" aria-label="'+x.n+'"><span class="sw" style="background:'+x.c+'">'+x.k+'</span><span class="nm">'+x.n+'</span></button>';});
-  h+='<button type="button" class="tool" data-tool="★" aria-pressed="false" aria-label="服薬（★）"><span class="sw" style="color:var(--star);border:1px solid var(--line)">★</span><span class="nm">服薬</span></button>';
+  h+='<button type="button" class="tool" data-tool="★" aria-pressed="false" aria-label="薬を飲んだ（★）"><span class="sw" style="color:var(--star);border:1px solid var(--line)">★</span><span class="nm">服薬</span></button>';
   h+='<button type="button" class="tool" data-tool="erase" aria-pressed="false" aria-label="消す"><span class="sw" style="border:1px dashed var(--line-strong);font-size:15px">消</span><span class="nm">消す</span></button>';
   $("palette").innerHTML=h;
-  $("palette").addEventListener("click",function(e){var b=e.target.closest(".tool"); if(!b) return; tool=b.dataset.tool; markTool();});
-  markTool();
-}
+  var lg="";CODES.forEach(function(x){lg+='<div><span class="chip" style="background:'+x.c+'">'+x.k+'</span>'+x.d+'</div>';});
+  lg+='<div><span class="chip" style="color:var(--star)">★</span>薬を飲んだ（他の記号と一緒に付けられます）</div><div><span class="chip" style="font-size:.8em">消</span>入れたものを消す</div>';
+  $("legend").innerHTML=lg;
+  var sc="";ACT.forEach(function(t,i){sc+="<li><b>"+(i+1)+"</b>："+t+"</li>";}); $("actScale").innerHTML=sc;
+})();
+$("palette").addEventListener("click",function(e){var b=e.target.closest(".tool");if(!b)return;tool=b.dataset.tool;markTool();});
 function markTool(){document.querySelectorAll(".tool").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.tool===tool?"true":"false");});}
-
-/* day buttons */
+markTool();
 function renderDays(){
-  [["days1",0],["days2",7]].forEach(function(g){
-    var h="";
-    for(var i=g[1];i<g[1]+7;i++){
-      var d=dateOf(i), top=d?String(d.getDate()):String(i+1), w=d?WD[d.getDay()]:"日目";
-      var pct=Math.round(filled(S.days[i])/24*100);
-      h+='<button type="button" class="day-btn" data-i="'+i+'" aria-current="'+(i===cur)+'"><span class="d">'+top+'</span><span class="w">'+(w||"&nbsp;")+'</span><span class="bar"><i style="width:'+pct+'%"></i></span></button>';
-    }
-    $(g[0]).innerHTML=h;
-    var a=dateOf(g[1]), z=dateOf(g[1]+6);
-    $(g[0]+"lbl").textContent=(g[1]?"2週目":"1週目")+(a?"（"+(a.getMonth()+1)+"/"+a.getDate()+"〜"+(z.getMonth()+1)+"/"+z.getDate()+"）":"");
-  });
+  var h="";
+  for(var i=0;i<N;i++){
+    var d=dateOf(i), top=d?String(d.getDate()):String(i+1), w=d?WD[d.getDay()]:"日目";
+    h+='<button type="button" class="day" data-i="'+i+'" aria-current="'+(i===cur)+'" aria-label="'+label(i)+(dayDone(S.days[i])?" 入力あり":"")+'"><span class="d">'+top+'</span><span class="w">'+w+'</span><span class="m">'+(dayDone(S.days[i])?"✓":"")+'</span></button>';
+  }
+  $("days").innerHTML=h;
 }
-document.addEventListener("click",function(e){var b=e.target.closest(".day-btn"); if(b){cur=+b.dataset.i; renderAll(); $("editor").scrollIntoView({block:"start",behavior:"smooth"});}});
-
-/* hour grid */
-function renderHours(){
+$("days").addEventListener("click",function(e){var b=e.target.closest(".day");if(!b)return;cur=+b.dataset.i;save();renderDay();renderBar();});
+function renderDay(){
+  renderDays();
   var day=S.days[cur],h="";
   HOURS.forEach(function(hr,idx){
-    var v=day.a[idx], bg=v?COLOR[v]:"#fff";
-    h+='<div class="cell'+(NIGHT[hr]?" night":"")+'" data-x="'+idx+'" style="background-color:'+bg+'" role="button" aria-label="'+hr+'時 '+(v||"空き")+(day.s[idx]?" 服薬":"")+'"><span class="h">'+hr+'</span><span class="v">'+(v||"")+'</span>'+(day.s[idx]?'<span class="s">★</span>':'')+'</div>';
+    var v=day.a[idx];
+    h+='<div class="cell'+(NIGHT[hr]?" night":"")+'" data-x="'+idx+'" style="background-color:'+(v?COLOR[v]:"#fff")+'" role="button" aria-label="'+hr+'時 '+(v?NAME[v]:"空き")+(day.s[idx]?" 服薬":"")+'"><span class="h">'+hr+'</span><span class="v">'+(v||"")+'</span>'+(day.s[idx]?'<span class="s">★</span>':'')+'</div>';
   });
   $("hours").innerHTML=h;
-  $("dayTitle").textContent=label(cur)+"　"+(cur<7?"1週目":"2週目");
-  $("prev").disabled=cur===0; $("next").disabled=cur===13;
+  $("dayTitle").textContent=label(cur);
+  $("dayCount").textContent=(cur+1)+"日目 / "+N+"日";
+  renderSeg();
 }
-var painting=false, starMode=true, lastX=-1, startX=-1, snapA=null, snapS=null;
-var hoursEl=$("hours");
-function applyRange(to){
-  var day=S.days[cur], lo=Math.min(startX,to), hi=Math.max(startX,to);
-  for(var i=0;i<24;i++){
-    var inR=i>=lo&&i<=hi;
-    var na=snapA[i], ns=snapS[i];
-    if(inR){ if(tool==="erase"){na="";ns=false;} else if(tool==="★"){ns=starMode;} else na=tool; }
-    if(day.a[i]!==na||day.s[i]!==ns){ day.a[i]=na; day.s[i]=ns; drawCell(i); }
-  }
-}
+var painting=false,starMode=true,lastX=-1,startX=-1,snapA=null,snapS=null,hoursEl=$("hours");
 function drawCell(idx){
-  var day=S.days[cur], el=hoursEl.querySelector('[data-x="'+idx+'"]'), v=day.a[idx];
-  el.style.backgroundColor=v?COLOR[v]:"#fff";
-  el.querySelector(".v").textContent=v||"";
+  var day=S.days[cur],el=hoursEl.querySelector('[data-x="'+idx+'"]'),v=day.a[idx];
+  el.style.backgroundColor=v?COLOR[v]:"#fff"; el.querySelector(".v").textContent=v||"";
   var s=el.querySelector(".s");
   if(day.s[idx]&&!s){s=document.createElement("span");s.className="s";s.textContent="★";el.appendChild(s);}
   if(!day.s[idx]&&s) s.remove();
 }
+function applyRange(to){
+  var day=S.days[cur],lo=Math.min(startX,to),hi=Math.max(startX,to);
+  for(var i=0;i<24;i++){
+    var na=snapA[i],ns=snapS[i];
+    if(i>=lo&&i<=hi){ if(tool==="erase"){na="";ns=false;} else if(tool==="★"){ns=starMode;} else na=tool; }
+    if(day.a[i]!==na||day.s[i]!==ns){day.a[i]=na;day.s[i]=ns;drawCell(i);}
+  }
+}
 hoursEl.addEventListener("pointerdown",function(e){
   var c=e.target.closest(".cell"); if(!c) return;
   e.preventDefault(); painting=true;
-  var idx=+c.dataset.x, day=S.days[cur];
+  var idx=+c.dataset.x,day=S.days[cur];
   snapA=day.a.slice(); snapS=day.s.slice(); startX=idx; lastX=idx;
   if(tool==="★") starMode=!day.s[idx];
   applyRange(idx);
@@ -375,70 +421,82 @@ hoursEl.addEventListener("pointermove",function(e){
   if(!painting) return;
   var el=document.elementFromPoint(e.clientX,e.clientY); if(!el) return;
   var c=el.closest&&el.closest(".cell"); if(!c||!hoursEl.contains(c)) return;
-  var idx=+c.dataset.x; if(idx===lastX) return;
-  lastX=idx; applyRange(idx);
+  var idx=+c.dataset.x; if(idx===lastX) return; lastX=idx; applyRange(idx);
 });
-function endPaint(){ if(!painting) return; painting=false; lastX=-1; save(); renderDays(); renderOverview(); }
+function endPaint(){ if(!painting) return; painting=false; lastX=-1; save(); renderDays(); }
 hoursEl.addEventListener("pointerup",endPaint);
 hoursEl.addEventListener("pointercancel",endPaint);
 hoursEl.addEventListener("lostpointercapture",endPaint);
-
-/* mood / act */
 function renderSeg(){
   var day=S.days[cur],m="",a="";
-  [5,4,3,2,1].forEach(function(v){m+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.mood)===String(v))+'" aria-label="気分 '+v+' '+MOOD[v]+'">'+v+'</button>';});
-  for(var v=1;v<=7;v++) a+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.act)===String(v))+'" aria-label="活動度 '+v+'">'+v+'</button>';
+  [5,4,3,2,1].forEach(function(v){m+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.mood)===String(v))+'">'+v+'<small>'+MOOD[v]+'</small></button>';});
+  for(var v=1;v<=7;v++) a+='<button type="button" data-v="'+v+'" aria-pressed="'+(String(day.act)===String(v))+'" aria-label="活動度 '+v+'：'+ACT[v-1]+'">'+v+'</button>';
   $("mood").innerHTML=m; $("act").innerHTML=a;
-  $("actHint").textContent=day.act?(day.act+"："+ACT[day.act-1]):"";
+  $("actHint").textContent=day.act?(day.act+"："+ACT[day.act-1]):"数字を押すと、目安が表示されます。";
   $("comment").value=day.cm||"";
 }
-$("mood").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.mood=(String(d.mood)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderOverview();});
-$("act").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.act=(String(d.act)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderOverview();});
-$("comment").addEventListener("input",function(){S.days[cur].cm=this.value;save();renderOverview();});
-$("prev").addEventListener("click",function(){if(cur>0){cur--;renderAll();}});
-$("next").addEventListener("click",function(){if(cur<13){cur++;renderAll();}});
-$("name").value=S.name||""; $("start").value=S.start||"";
-$("name").addEventListener("input",function(){S.name=this.value;save();});
-$("start").addEventListener("change",function(){S.start=this.value;save();renderAll();});
+$("mood").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.mood=(String(d.mood)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderDays();});
+$("act").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var d=S.days[cur];d.act=(String(d.act)===b.dataset.v)?"":+b.dataset.v;save();renderSeg();renderDays();});
+$("comment").addEventListener("input",function(){S.days[cur].cm=this.value;save();});
 
-/* overview */
+/* ---------- step 3 ---------- */
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function renderOverview(){
+  var done=S.days.filter(dayDone).length;
+  $("progBar").style.width=Math.round(done/N*100)+"%";
+  $("progTxt").textContent=done+" / "+N+" 日";
+  $("progNote").textContent=done===N?"7日分そろいました。おつかれさまでした。":"書けていない日があっても、そのまま送って大丈夫です。";
   var h='<thead><tr><th>月/日（曜）</th>';
-  HOURS.forEach(function(hr){h+='<th class="'+(NIGHT[hr]?"n":"")+'">'+hr+'</th>';});
-  h+='<th>気分</th><th>活動度</th><th>コメント</th></tr></thead><tbody>';
-  for(var i=0;i<14;i++){
+  HOURS.forEach(function(hr){h+='<th>'+hr+'</th>';});
+  h+='<th>気分</th><th>活動度</th><th>ひとこと</th></tr></thead><tbody>';
+  for(var i=0;i<N;i++){
     var d=S.days[i];
-    h+='<tr class="'+(i===cur?"sel":"")+'"><td class="dt" data-i="'+i+'" style="cursor:pointer">'+label(i)+'</td>';
-    for(var x=0;x<24;x++){var v=d.a[x];h+='<td class="hc" data-i="'+i+'" style="background:'+(v?COLOR[v]:"#fff")+'">'+(v||"")+(d.s[x]?'<i>★</i>':'')+'</td>';}
-    h+='<td>'+(d.mood||"")+'</td><td>'+(d.act||"")+'</td><td class="cm" title="'+esc(d.cm||"")+'">'+esc(d.cm||"")+'</td></tr>';
-    if(i===6) h+='<tr><td colspan="28" style="height:4px;background:#DDE2E8"></td></tr>';
+    h+='<tr><td class="dt" data-i="'+i+'">'+label(i)+'</td>';
+    for(var x=0;x<24;x++){var v=d.a[x];h+='<td class="hc" style="background:'+(v?COLOR[v]:"#fff")+'">'+(v||"")+(d.s[x]?'<i>★</i>':'')+'</td>';}
+    h+='<td>'+(d.mood||"")+'</td><td>'+(d.act||"")+'</td><td class="cm">'+esc(d.cm||"")+'</td></tr>';
   }
   $("ov").innerHTML=h+'</tbody>';
 }
-$("ov").addEventListener("click",function(e){var t=e.target.closest("[data-i]");if(!t)return;cur=+t.dataset.i;renderAll();$("editor").scrollIntoView({block:"start",behavior:"smooth"});});
+$("ov").addEventListener("click",function(e){var t=e.target.closest("td.dt");if(!t)return;cur=+t.dataset.i;save();go(2);});
 
-function renderAll(){renderDays();renderHours();renderSeg();renderOverview();if(typeof updateMail==="function")updateMail();}
-
-/* ---------- export ---------- */
-function fileBase(){
-  var nm=(S.name||"").replace(/[\\\/:*?"<>|\s]/g,"");
-  var d=new Date(), ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
-  return "生活記録表_"+(nm?nm+"_":"")+ymd;
+/* ---------- record as text (for mail body) ---------- */
+function hourLabel(idx){return HOURS[idx]+"時";}
+function runs(arr,test){ // returns [[start,endExclusive],...] over 0..23 indices
+  var r=[],s=-1; for(var i=0;i<=24;i++){var on=i<24&&test(arr[i],i); if(on&&s<0)s=i; if(!on&&s>=0){r.push([s,i]);s=-1;}} return r;
 }
-var stT=null;function status(t){$("status").textContent=t; clearTimeout(stT); stT=setTimeout(function(){$("status").textContent="";},9000);}
+function fmtRuns(rs){return rs.map(function(p){var a=HOURS[p[0]],b=(p[1]<24?HOURS[p[1]]:4); return (p[1]-p[0]===1)?a+"時":a+"〜"+b+"時";}).join("、");}
+function recordText(short){
+  var L=[];
+  L.push("【生活記録表】"+(S.name||"（お名前未入力）")+(S.start?"　"+label(0)+"〜"+label(N-1):""));
+  for(var i=0;i<N;i++){
+    var d=S.days[i];
+    var head="■"+label(i)+(d.mood!==""?"　気分"+d.mood+"（"+MOOD[d.mood]+"）":"")+(d.act!==""?"　活動度"+d.act:"");
+    L.push(head);
+    if(!dayDone(d)&&!d.cm){L.push("　（記入なし）");continue;}
+    var parts=[];
+    CODES.forEach(function(x){var rs=runs(d.a,function(v){return v===x.k;}); if(rs.length) parts.push(x.n+" "+fmtRuns(rs));});
+    var st=runs(d.s,function(v){return !!v;}); if(st.length) parts.push("服薬★ "+st.map(function(p){var o=[];for(var k=p[0];k<p[1];k++)o.push(HOURS[k]+"時");return o.join("・");}).join("・"));
+    if(parts.length) L.push("　"+parts.join(" ／ "));
+    if(d.cm&&!short) L.push("　ひとこと："+d.cm.replace(/\s*\n\s*/g," "));
+    if(d.cm&&short) L.push("　ひとこと："+d.cm.replace(/\s*\n\s*/g," ").slice(0,40)+(d.cm.length>40?"…":""));
+  }
+  return L.join("\n");
+}
+
+/* ---------- export (image / excel) ---------- */
+function fileBase(){var nm=(S.name||"").replace(/[\\\/:*?"<>|\s]/g,"");var d=new Date(),ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");return "生活記録表_"+(nm?nm+"_":"")+ymd;}
 function drawCanvas(){
   var W=2000,cellW=52,dateW=150,moodW=60,actW=70,left=30,top=0;
   var cmW=W-left*2-dateW-cellW*24-moodW-actW;
   var rowH=54, headH=56;
-  var H=200+headH*2+rowH*14+30+150;
+  var H=200+headH+rowH*N+30+150;
   var cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   var g=cv.getContext("2d"), F='"BIZ UDPGothic","Hiragino Sans","Meiryo","Noto Sans JP",sans-serif';
   g.fillStyle="#fff"; g.fillRect(0,0,W,H);
   g.fillStyle="#1F2933"; g.textBaseline="middle";
-  g.font="bold 44px "+F; g.fillText("生活記録表（2週間）",left,50);
+  g.font="bold 44px "+F; g.fillText("生活記録表（1週間）",left,50);
   g.font="28px "+F;
-  var period=S.start?(label(0)+" 〜 "+label(13)):"記録開始日：未入力";
+  var period=S.start?(label(0)+" 〜 "+label(N-1)):"記録開始日：未入力";
   g.fillText("氏名："+(S.name||"（未入力）")+"　　期間："+period,left,105);
   // legend
   var lx=left, ly=155; g.font="24px "+F;
@@ -463,7 +521,7 @@ function drawCanvas(){
     var y0=y-(lines.length-1)*lh/2; lines.forEach(function(l,k){g.fillText(l,x,y0+k*lh);});
   }
   var y=top;
-  for(var w=0;w<2;w++){
+  for(var w=0;w<1;w++){
     header(y); y+=headH;
     for(var r=0;r<7;r++){
       var i=w*7+r, d=S.days[i];
@@ -493,23 +551,11 @@ function drawCanvas(){
   g.fillText("　　　　4 短時間の外出などできるが、疲れが翌日に残る　5 毎日、短時間の外出などができる　6 （平日は）どこかに通い、何とか課題に取り組める　7 （平日は）どこかに通い、集中して課題に取り組める",left,y+90);
   return cv;
 }
+
 function toBlob(cv){return new Promise(function(res){cv.toBlob(function(b){res(b);},"image/png");});}
-function download(blob,name){
-  var url=URL.createObjectURL(blob), a=document.createElement("a");
-  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(function(){URL.revokeObjectURL(url);},4000);
-}
-function saveImageNow(){
-  var name=fileBase()+".png";
-  try{
-    var url=drawCanvas().toDataURL("image/png"), a=document.createElement("a");
-    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
-    imgDirty=false; return name;
-  }catch(e){ status("画像の保存に失敗しました。もう一度お試しください。"); return null; }
-}
-$("savePng").addEventListener("click",function(){
-  var n=saveImageNow(); if(n) status("画像を保存しました（"+n+"）。次に②で使っているメールを選んでください。");
-});
+function download(blob,name){var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},4000);}
+function saveImageNow(){var name=fileBase()+".png";try{var url=drawCanvas().toDataURL("image/png"),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();imgDirty=false;return name;}catch(e){toast("画像の保存に失敗しました。もう一度お試しください。");return null;}}
+$("savePng").addEventListener("click",function(){var n=saveImageNow();if(n)toast("画像を保存しました（"+n+"）。メールやチャットのクリップ（＋）マークから添付できます。",8000);});
 /* minimal .xlsx writer (no external library): stored ZIP + SpreadsheetML with colored cells */
 var CRC_T=(function(){var t=[],c;for(var n=0;n<256;n++){c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
 function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CRC_T[(c^u[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
@@ -553,12 +599,12 @@ function buildXlsx(){
   var codeStyle={}; CODES.forEach(function(x,i){codeStyle[x.k]=4+i;});
   var rows=[], rn=0;
   function row(cells,ht){rn++;var h='<row r="'+rn+'"'+(ht?' ht="'+ht+'" customHeight="1"':'')+'>';cells.forEach(function(c,i){if(c==null)return;var ref=colName(i)+rn;var st=c.s||0;if(c.v===""||c.v==null){h+='<c r="'+ref+'" s="'+st+'"/>';}else if(typeof c.v==="number"){h+='<c r="'+ref+'" s="'+st+'"><v>'+c.v+'</v></c>';}else{h+='<c r="'+ref+'" s="'+st+'" t="inlineStr"><is><t xml:space="preserve">'+xesc(c.v)+'</t></is></c>';}});rows.push(h+'</row>');}
-  row([{v:"生活記録表（2週間）",s:TITLE}],26);
+  row([{v:"生活記録表（1週間）",s:TITLE}],26);
   row([{v:"氏名",s:1},{v:S.name||""}]);
-  row([{v:"期間",s:1},{v:S.start?(label(0)+" 〜 "+label(13)):""}]);
+  row([{v:"期間",s:1},{v:S.start?(label(0)+" 〜 "+label(N-1)):""}]);
   rn++;
   function head(){row([{v:"月/日（曜）",s:3}].concat(HOURS.map(function(h){return {v:h,s:3};})).concat([{v:"気分",s:3},{v:"活動度",s:3},{v:"コメント",s:3}]),24);}
-  for(var w=0;w<2;w++){
+  for(var w=0;w<1;w++){
     head();
     for(var r=0;r<7;r++){var i=w*7+r,d=S.days[i];
       row([{v:label(i),s:2}].concat(d.a.map(function(v,x){var t=(v||"")+(d.s[x]?"★":"");return {v:t,s:v?codeStyle[v]:2};})).concat([{v:d.mood===""?"":+d.mood,s:2},{v:d.act===""?"":+d.act,s:2},{v:d.cm||"",s:WRAP}]),30);}
@@ -578,65 +624,71 @@ function buildXlsx(){
     {name:"xl/worksheets/sheet1.xml",data:sheet}
   ]);
 }
-$("saveXlsx").addEventListener("click",function(){
-  var b; try{b=buildXlsx();}catch(err){status("Excelの作成に失敗しました。「画像で保存」をお使いください。");return;}
-  download(b,fileBase()+".xlsx"); status("Excelファイルを保存しました（"+fileBase()+".xlsx）。");
-});
+
+$("saveXlsx").addEventListener("click",function(){var b;try{b=buildXlsx();}catch(err){toast("Excelの作成に失敗しました。「画像で保存」をお使いください。");return;}download(b,fileBase()+".xlsx");toast("Excelファイルを保存しました（"+fileBase()+".xlsx）。",8000);});
+$("print").addEventListener("click",function(){window.print();});
+
+/* ---------- share / mail ---------- */
 $("share").addEventListener("click",function(){
   toBlob(drawCanvas()).then(function(b){
     var f=new File([b],fileBase()+".png",{type:"image/png"});
+    var data={files:[f],title:"生活記録表",text:recordText(true)};
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      navigator.share({files:[f],title:"生活記録表",text:mailSubject()}).then(function(){status("送信アプリを開きました。送り先を確認して送ってください。");}).catch(function(err){ if(err&&err.name==="AbortError") status("共有を取り消しました。"); else {download(b,f.name); imgDirty=false; status("共有できなかったため、画像を保存しました。下の「メールで送る」の②から送ってください。");}});
-    } else { download(b,f.name); imgDirty=false; status("この端末では共有が使えないため、画像を保存しました。下の「メールで送る」の②から送ってください。"); }
+      navigator.share(data).then(function(){toast("送るアプリを開きました。送り先を確認して送信してください。");}).catch(function(err){ if(err&&err.name==="AbortError") toast("共有を取り消しました。"); else {download(b,f.name); toast("共有できなかったため画像を保存しました。「メールで送る」からも送れます。",8000);}});
+    } else { download(b,f.name); toast("この端末では共有が使えないため画像を保存しました。「メールで送る」からも送れます。",8000); }
   });
 });
-/* ----- mail ----- */
 function mailTo(){return ($("mailTo").value||"").trim();}
-function mailSubject(){return "【生活記録表】"+(S.name||"")+(S.start?"（"+label(0)+"〜"+label(13)+"）":"");}
-function mailBody(){
-  return "いつもお世話になっております。\n"+"生活記録表"+(S.start?"（"+label(0)+"〜"+label(13)+"）":"")+"を提出します。\n"+
-    "添付ファイル："+fileBase()+".png\n\n"+(S.name||"");
-}
+function mailSubject(){return "【生活記録表】"+(S.name||"")+(S.start?"（"+label(0)+"〜"+label(N-1)+"）":"");}
+function mailBody(short){return "生活記録表を提出します。\n\n"+recordText(short)+"\n\n※記号：睡眠・食事・家事・外出・仕事・趣味・学習・運動、★＝服薬\n※気分：5とても良い〜1とても悪い／活動度：1〜7";}
 function enc(t){return encodeURIComponent(t);}
-function updateMail(){
-  var to=mailTo(), su=mailSubject(), bo=mailBody();
-  $("mGmail").href="https://mail.google.com/mail/?view=cm&fs=1&to="+enc(to)+"&su="+enc(su)+"&body="+enc(bo);
-  $("mO365").href="https://outlook.office.com/mail/deeplink/compose?to="+enc(to)+"&subject="+enc(su)+"&body="+enc(bo);
-  $("mOutlook").href="https://outlook.live.com/mail/0/deeplink/compose?to="+enc(to)+"&subject="+enc(su)+"&body="+enc(bo);
-  $("mYahoo").href="https://mail.yahoo.co.jp/";
-  $("mApp").href="mailto:"+to.replace(/[^A-Za-z0-9.!#$%&'*+\/=?^_`{|}~@-]/g,"")+"?subject="+enc(su)+"&body="+enc(bo);
-  $("cpTo").value=to; $("cpSubj").value=su; $("cpBody").value=bo;
+var LIMIT=7000;
+function build(base,pTo,pSu,pBo){
+  var to=mailTo(),su=mailSubject(),u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc(mailBody(false));
+  if(u.length>LIMIT) u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc(mailBody(true));
+  if(u.length>LIMIT) u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc("生活記録表を提出します。\n（記録の内容は長いため、ページの「件名・本文をコピーする」から本文を貼り付けてください）");
+  return u;
 }
-document.querySelector(".mailbtns").addEventListener("click",function(e){
+function updateMail(){
+  if(!$("mGmail")) return;
+  $("mGmail").href=build("https://mail.google.com/mail/?view=cm&fs=1&","to=","su=","body=");
+  $("mO365").href=build("https://outlook.office.com/mail/deeplink/compose?","to=","subject=","body=");
+  $("mOutlook").href=build("https://outlook.live.com/mail/0/deeplink/compose?","to=","subject=","body=");
+  var t=mailTo().replace(/[^A-Za-z0-9.!#$%&'*+\/=?^_`{|}~@-]/g,"");
+  $("mApp").href=build("mailto:"+t+"?","","subject=","body=").replace("mailto:"+t+"?&","mailto:"+t+"?");
+  $("cpTo").value=mailTo(); $("cpSubj").value=mailSubject(); $("cpBody").value=mailBody(false);
+}
+$("mailbtns").addEventListener("click",function(e){
   var a=e.target.closest("a"); if(!a) return;
-  var n=null; if(imgDirty) n=saveImageNow();
-  var msg=(n?"画像を保存しました（"+n+"）。":"")+"開いたメール作成画面で、保存した画像を添付して送信してください。";
-  if(a.id==="mYahoo"){ msg=(n?"画像を保存しました（"+n+"）。":"")+"Yahoo!メールで「メールを作成」を押し、下の「宛先・件名・本文」をコピーして貼り付け、画像を添付して送信してください。"; document.querySelector(".copybox").open=true; }
-  if(a.id==="mApp"){ msg=(n?"画像を保存しました（"+n+"）。":"")+"メールアプリが開かない場合は、上のGmail・Outlookなどを選ぶか、下の「宛先・件名・本文」をコピーしてください。"; }
-  status(msg);
+  if(a.id==="mApp") toast("メールアプリが開かない場合は、Gmail・Outlookを選ぶか、「件名・本文をコピーする」を使ってください。",9000);
+  else toast("メールの作成画面を開きました。記録の内容は本文に入っています。送り先を確認して送信してください。",9000);
 });
-document.querySelector(".copybox").addEventListener("click",function(e){
+$("copybox").addEventListener("click",function(e){
   var b=e.target.closest("[data-copy]"); if(!b) return;
-  var el=$(b.dataset.copy), t=el.value;
-  function sel(){ try{el.focus(); el.select(); el.setSelectionRange(0,t.length);}catch(_){} }
-  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){status("コピーしました。メールの画面に貼り付けてください。");},function(){sel(); status("文字を選択しました。長押し（右クリック）→「コピー」でコピーしてください。");}); }
-  else { sel(); try{document.execCommand("copy"); status("コピーしました。");}catch(_){ status("文字を選択しました。長押し（右クリック）→「コピー」でコピーしてください。"); } }
+  var el=$(b.dataset.copy),t=el.value;
+  function sel(){try{el.focus();el.select();el.setSelectionRange(0,t.length);}catch(_){}}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("コピーしました。メールやチャットに貼り付けてください。");},function(){sel();toast("文字を選択しました。長押し（右クリック）→「コピー」を選んでください。");});}
+  else{sel();try{document.execCommand("copy");toast("コピーしました。");}catch(_){toast("文字を選択しました。長押し（右クリック）→「コピー」を選んでください。");}}
 });
 (function(){
   var q=null; try{q=new URLSearchParams(location.search).get("to");}catch(e){}
-  if(q){ S.to=q; save(); }
+  if(q){S.to=q;}
   $("mailTo").value=S.to||"";
-  $("mailTo").addEventListener("input",function(){S.to=this.value;save();updateMail();});
+  $("mailTo").addEventListener("input",function(){S.to=this.value;save();});
   var coarse=false; try{coarse=window.matchMedia("(pointer: coarse)").matches;}catch(e){}
-  if(coarse&&navigator.share&&navigator.canShare) $("shareBlock").hidden=false;
+  if(coarse&&navigator.share&&navigator.canShare) $("wayShare").hidden=false;
 })();
-$("print").addEventListener("click",function(){window.print();});
 $("clear").addEventListener("click",function(){$("confirmBox").hidden=false;});
 $("clearNo").addEventListener("click",function(){$("confirmBox").hidden=true;});
-$("clearYes").addEventListener("click",function(){S=blank();cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;renderAll();status("記入内容を消しました。");});
+$("clearYes").addEventListener("click",function(){var to=S.to;S=blank();S.to=to;cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;toast("記録を消しました。");go(1);});
 
-buildPalette(); renderAll(); updateMail();
-if(!filled(S.days[0])&&!S.name){ try{$("howto").open=true;}catch(e){} }
+/* ---------- start ---------- */
+updateMail();
+if(restored&&hasData()){
+  if(S.ts) $("saved").textContent="✓ 自動保存 "+hhmm(S.ts);
+  go(2);
+  toast("前回の続きから再開しました"+(S.ts?"（最後に保存："+hhmm(S.ts)+"）":"")+"。",6000);
+} else go(1);
 })();
 </script>
 </body>
