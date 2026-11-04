@@ -95,8 +95,19 @@ table.ov{border-collapse:collapse;font-size:.85rem;min-width:820px;width:100%}
 .ov tr.sel td.dt{background:var(--accent-soft)}
 
 .actions{display:flex;flex-wrap:wrap;gap:10px}
-.status{min-height:1.6em;font-weight:700;color:var(--accent)}
+.status{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;max-width:760px;margin:0 auto;background:var(--ink);color:#fff;font-weight:700;padding:12px 16px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.status:empty{display:none}
 .confirm{border:1.5px solid var(--danger);border-radius:8px;padding:12px;background:#FFF5F4;display:grid;gap:8px}
+.sendblock{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:12px;display:grid;gap:8px}
+.sendblock h3{margin:0;font-size:1.05rem}
+ol.steps{margin:0;padding-left:1.6em;display:grid;gap:12px}
+ol.steps li::marker{font-weight:700;color:var(--accent)}
+ol.steps .actions{margin-top:6px}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.copybox summary{font-size:1rem}
+.cprow{display:grid;grid-template-columns:3em minmax(0,1fr) auto;gap:8px;align-items:start;margin-top:8px}
+.cprow span{font-weight:700;padding-top:10px}
+.cprow input,.cprow textarea{width:100%;font-size:16px}
 footer{font-size:.85rem;color:var(--muted);text-align:center}
 @media (max-width:480px){
   body{font-size:16px}
@@ -139,7 +150,7 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
       <li>薬を飲んだ時間は「★」を選んでマスをタップします（記号と一緒に付けられます）。消すときは「消す」を選んでタップします。</li>
       <li>1日の終わりに、気分（1〜5）と活動度（1〜7）を選び、体調や出来事をコメント欄に書きます。</li>
       <li>入力した内容は自動で端末に保存されるので、毎日続きから記入できます。</li>
-      <li>2週間分が終わったら、下の「保存・提出」から画像やExcelで保存して送ってください。</li>
+      <li>2週間分が終わったら、下の「保存・提出」から送ってください。スマホはアプリを選んで送れます。パソコンやブラウザのメール（Gmail・Outlook・Yahoo!メールなど）でも送れます。</li>
     </ol>
     <p class="note">※ 1マス＝1時間です（朝4時から翌朝4時まで）。何も入れていない時間は「特に何もしていない・テレビなど」として扱います。</p>
     <div class="legend" id="legend"></div>
@@ -187,18 +198,50 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
 
 <section class="panel no-print">
   <h2>保存・提出</h2>
-  <div class="actions">
-    <button class="btn primary" id="share" type="button">共有して送る（スマホ）</button>
-    <button class="btn primary" id="savePng" type="button">画像で保存</button>
-    <button class="btn" id="saveXlsx" type="button">Excelで保存</button>
-    <button class="btn" id="print" type="button">印刷・PDF（パソコン）</button>
-  </div>
   <div class="status" id="status" role="status" aria-live="polite"></div>
-  <ul class="note" style="margin:4px 0 0;padding-left:1.2em">
-    <li><b>スマホ</b>：「共有して送る」を押し、メール・LINE・Teams・Slack・Chatworkなど送りたいアプリを選んでください。共有できない場合は「画像で保存」を押し、保存した画像を各アプリで添付してください。</li>
-    <li><b>パソコン</b>：「画像で保存」または「Excelで保存」でファイルを保存し、メールやチャットに添付してください。「印刷・PDF」で印刷画面から「PDFに保存」もできます。</li>
-    <li>健康に関わる大切な情報です。送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</li>
-  </ul>
+
+  <div class="sendblock" id="shareBlock" hidden>
+    <h3>スマホのアプリで送る（いちばん簡単）</h3>
+    <button class="btn primary" id="share" type="button">アプリを選んで送る</button>
+    <p class="note">LINE・Gmailアプリ・Teams・Slack・Chatwork・メールなど、送りたいアプリを選ぶと画像が添付された状態で開きます。</p>
+  </div>
+
+  <div class="sendblock">
+    <h3>メールで送る（パソコン・スマホのブラウザのメールでも可）</h3>
+    <label class="f" for="mailTo">送り先のメールアドレス（わかる場合）<input type="text" id="mailTo" inputmode="email" autocomplete="off" placeholder="例：sangyoui@example.com"></label>
+    <ol class="steps">
+      <li><b>画像を保存する</b>
+        <div class="actions"><button class="btn primary" id="savePng" type="button">画像で保存</button><button class="btn" id="saveXlsx" type="button">Excelで保存</button></div>
+        <div class="hint">パソコンは「ダウンロード」フォルダ、スマホは「ファイル」アプリや写真に保存されます。</div>
+      </li>
+      <li><b>使っているメールを選ぶ</b>（件名と本文が入った作成画面が開きます）
+        <div class="actions mailbtns">
+          <a class="btn" id="mGmail" target="_blank" rel="noopener">Gmail</a>
+          <a class="btn" id="mO365" target="_blank" rel="noopener">Outlook（会社・学校）</a>
+          <a class="btn" id="mOutlook" target="_blank" rel="noopener">Outlook.com（個人）</a>
+          <a class="btn" id="mYahoo" target="_blank" rel="noopener">Yahoo!メール</a>
+          <a class="btn" id="mApp">パソコン・スマホのメールアプリ</a>
+        </div>
+        <div class="hint">まだ画像を保存していない場合は、ここを押したときに自動で保存されます。Yahoo!メールなどは、作成画面を開いて下の「件名・本文」をコピーして貼り付けてください。</div>
+      </li>
+      <li><b>保存した画像を添付して送信する</b>
+        <div class="hint">メール作成画面のクリップ（添付）マークを押し、①で保存した画像（ファイル名は「生活記録表_…」）を選んでから送信してください。</div>
+      </li>
+    </ol>
+    <details class="copybox">
+      <summary>宛先・件名・本文をコピーする（どのメール・チャットでも使えます）</summary>
+      <div class="cprow"><span>宛先</span><input type="text" id="cpTo" readonly><button class="btn" type="button" data-copy="cpTo">コピー</button></div>
+      <div class="cprow"><span>件名</span><input type="text" id="cpSubj" readonly><button class="btn" type="button" data-copy="cpSubj">コピー</button></div>
+      <div class="cprow"><span>本文</span><textarea id="cpBody" readonly rows="5"></textarea><button class="btn" type="button" data-copy="cpBody">コピー</button></div>
+    </details>
+  </div>
+
+  <div class="sendblock">
+    <h3>その他</h3>
+    <div class="actions"><button class="btn" id="print" type="button">印刷・PDF（パソコン）</button></div>
+    <p class="note">LINE・Teams・Slack・Chatworkなどのチャットで送る場合は、①の「画像で保存」をしてから、各アプリのクリップ（＋）マークで画像を添付してください。</p>
+  </div>
+  <p class="note" style="margin:8px 0 0"><b>健康に関わる大切な情報です。</b>送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</p>
   <div style="margin-top:14px;display:grid;gap:8px">
     <div><button class="btn danger" id="clear" type="button">記入内容をすべて消す</button></div>
     <div class="confirm" id="confirmBox" hidden>
@@ -236,7 +279,8 @@ var KEY="seikatsu-kiroku-v1";
 function blank(){var d=[];for(var i=0;i<14;i++)d.push({a:Array(24).fill(""),s:Array(24).fill(false),mood:"",act:"",cm:""});return {name:"",start:"",days:d};}
 var S=blank(), cur=0, tool="睡";
 try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.days&&p.days.length===14) S=p;}}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+var imgDirty=true;
+function save(){imgDirty=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} if(typeof updateMail==="function"&&document.getElementById("mGmail")) updateMail();}
 
 var $=function(id){return document.getElementById(id);};
 
@@ -374,7 +418,7 @@ function renderOverview(){
 }
 $("ov").addEventListener("click",function(e){var t=e.target.closest("[data-i]");if(!t)return;cur=+t.dataset.i;renderAll();$("editor").scrollIntoView({block:"start",behavior:"smooth"});});
 
-function renderAll(){renderDays();renderHours();renderSeg();renderOverview();}
+function renderAll(){renderDays();renderHours();renderSeg();renderOverview();if(typeof updateMail==="function")updateMail();}
 
 /* ---------- export ---------- */
 function fileBase(){
@@ -382,7 +426,7 @@ function fileBase(){
   var d=new Date(), ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");
   return "生活記録表_"+(nm?nm+"_":"")+ymd;
 }
-function status(t){$("status").textContent=t;}
+var stT=null;function status(t){$("status").textContent=t; clearTimeout(stT); stT=setTimeout(function(){$("status").textContent="";},9000);}
 function drawCanvas(){
   var W=2000,cellW=52,dateW=150,moodW=60,actW=70,left=30,top=0;
   var cmW=W-left*2-dateW-cellW*24-moodW-actW;
@@ -455,8 +499,16 @@ function download(blob,name){
   a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){URL.revokeObjectURL(url);},4000);
 }
+function saveImageNow(){
+  var name=fileBase()+".png";
+  try{
+    var url=drawCanvas().toDataURL("image/png"), a=document.createElement("a");
+    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    imgDirty=false; return name;
+  }catch(e){ status("画像の保存に失敗しました。もう一度お試しください。"); return null; }
+}
 $("savePng").addEventListener("click",function(){
-  toBlob(drawCanvas()).then(function(b){download(b,fileBase()+".png"); status("画像を保存しました（"+fileBase()+".png）。メールやチャットに添付して送ってください。");});
+  var n=saveImageNow(); if(n) status("画像を保存しました（"+n+"）。次に②で使っているメールを選んでください。");
 });
 /* minimal .xlsx writer (no external library): stored ZIP + SpreadsheetML with colored cells */
 var CRC_T=(function(){var t=[],c;for(var n=0;n<256;n++){c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
@@ -534,16 +586,56 @@ $("share").addEventListener("click",function(){
   toBlob(drawCanvas()).then(function(b){
     var f=new File([b],fileBase()+".png",{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      navigator.share({files:[f],title:"生活記録表"}).then(function(){status("送信アプリを開きました。送り先を確認して送ってください。");}).catch(function(err){ if(err&&err.name==="AbortError") status("共有を取り消しました。"); else {download(b,f.name); status("共有できなかったため、画像を保存しました。各アプリで添付してください。");}});
-    } else { download(b,f.name); status("この端末では共有ボタンが使えないため、画像を保存しました。メールやチャットに添付して送ってください。"); }
+      navigator.share({files:[f],title:"生活記録表",text:mailSubject()}).then(function(){status("送信アプリを開きました。送り先を確認して送ってください。");}).catch(function(err){ if(err&&err.name==="AbortError") status("共有を取り消しました。"); else {download(b,f.name); imgDirty=false; status("共有できなかったため、画像を保存しました。下の「メールで送る」の②から送ってください。");}});
+    } else { download(b,f.name); imgDirty=false; status("この端末では共有が使えないため、画像を保存しました。下の「メールで送る」の②から送ってください。"); }
   });
 });
+/* ----- mail ----- */
+function mailTo(){return ($("mailTo").value||"").trim();}
+function mailSubject(){return "【生活記録表】"+(S.name||"")+(S.start?"（"+label(0)+"〜"+label(13)+"）":"");}
+function mailBody(){
+  return "いつもお世話になっております。\n"+"生活記録表"+(S.start?"（"+label(0)+"〜"+label(13)+"）":"")+"を提出します。\n"+
+    "添付ファイル："+fileBase()+".png\n\n"+(S.name||"");
+}
+function enc(t){return encodeURIComponent(t);}
+function updateMail(){
+  var to=mailTo(), su=mailSubject(), bo=mailBody();
+  $("mGmail").href="https://mail.google.com/mail/?view=cm&fs=1&to="+enc(to)+"&su="+enc(su)+"&body="+enc(bo);
+  $("mO365").href="https://outlook.office.com/mail/deeplink/compose?to="+enc(to)+"&subject="+enc(su)+"&body="+enc(bo);
+  $("mOutlook").href="https://outlook.live.com/mail/0/deeplink/compose?to="+enc(to)+"&subject="+enc(su)+"&body="+enc(bo);
+  $("mYahoo").href="https://mail.yahoo.co.jp/";
+  $("mApp").href="mailto:"+to.replace(/[^A-Za-z0-9.!#$%&'*+\/=?^_`{|}~@-]/g,"")+"?subject="+enc(su)+"&body="+enc(bo);
+  $("cpTo").value=to; $("cpSubj").value=su; $("cpBody").value=bo;
+}
+document.querySelector(".mailbtns").addEventListener("click",function(e){
+  var a=e.target.closest("a"); if(!a) return;
+  var n=null; if(imgDirty) n=saveImageNow();
+  var msg=(n?"画像を保存しました（"+n+"）。":"")+"開いたメール作成画面で、保存した画像を添付して送信してください。";
+  if(a.id==="mYahoo"){ msg=(n?"画像を保存しました（"+n+"）。":"")+"Yahoo!メールで「メールを作成」を押し、下の「宛先・件名・本文」をコピーして貼り付け、画像を添付して送信してください。"; document.querySelector(".copybox").open=true; }
+  if(a.id==="mApp"){ msg=(n?"画像を保存しました（"+n+"）。":"")+"メールアプリが開かない場合は、上のGmail・Outlookなどを選ぶか、下の「宛先・件名・本文」をコピーしてください。"; }
+  status(msg);
+});
+document.querySelector(".copybox").addEventListener("click",function(e){
+  var b=e.target.closest("[data-copy]"); if(!b) return;
+  var el=$(b.dataset.copy), t=el.value;
+  function sel(){ try{el.focus(); el.select(); el.setSelectionRange(0,t.length);}catch(_){} }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){status("コピーしました。メールの画面に貼り付けてください。");},function(){sel(); status("文字を選択しました。長押し（右クリック）→「コピー」でコピーしてください。");}); }
+  else { sel(); try{document.execCommand("copy"); status("コピーしました。");}catch(_){ status("文字を選択しました。長押し（右クリック）→「コピー」でコピーしてください。"); } }
+});
+(function(){
+  var q=null; try{q=new URLSearchParams(location.search).get("to");}catch(e){}
+  if(q){ S.to=q; save(); }
+  $("mailTo").value=S.to||"";
+  $("mailTo").addEventListener("input",function(){S.to=this.value;save();updateMail();});
+  var coarse=false; try{coarse=window.matchMedia("(pointer: coarse)").matches;}catch(e){}
+  if(coarse&&navigator.share&&navigator.canShare) $("shareBlock").hidden=false;
+})();
 $("print").addEventListener("click",function(){window.print();});
 $("clear").addEventListener("click",function(){$("confirmBox").hidden=false;});
 $("clearNo").addEventListener("click",function(){$("confirmBox").hidden=true;});
 $("clearYes").addEventListener("click",function(){S=blank();cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;renderAll();status("記入内容を消しました。");});
 
-buildPalette(); renderAll();
+buildPalette(); renderAll(); updateMail();
 if(!filled(S.days[0])&&!S.name){ try{$("howto").open=true;}catch(e){} }
 })();
 </script>
