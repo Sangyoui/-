@@ -107,6 +107,17 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
 .cprow .btn{grid-column:2;justify-self:start;min-height:44px}
 .cprow textarea{min-height:160px;font-size:15px}
 .cprow input{font-size:16px}
+.choices{display:grid;gap:10px}
+.choice{font:inherit;display:flex;align-items:center;gap:14px;text-align:left;border:2px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:14px;padding:12px 14px;min-height:72px;cursor:pointer}
+.choice b{display:block;font-size:1.08rem}
+.choice small{display:block;color:var(--muted);font-size:.85rem;line-height:1.4}
+.choice .ic{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:22px;font-weight:700}
+.choice .ic.line{background:#E6F6EA;color:#2E8B47}
+.choice[aria-expanded="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.panel{border-radius:12px;background:var(--accent-soft);padding:14px;display:grid;gap:10px}
+.toline{font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn.mini{min-height:36px;padding:4px 10px;font-size:.85rem}
+.btn small{font-weight:400;font-size:.8rem}
 .danger{color:#9B3D33;border-color:#C9A39D}
 .confirm{border:1.5px solid #C9A39D;border-radius:10px;padding:12px;background:#FBF1EF;display:grid;gap:8px}
 
@@ -163,7 +174,7 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
       <li>ブラウザを閉じても、<b>同じ端末・同じブラウザ</b>でこのページを開けば、続きから入力できます。</li>
       <li>別のスマホやパソコン、別のブラウザで開くと、続きは表示されません。毎日同じ方法で開いてください（ブックマークやホーム画面への追加が便利です）。</li>
       <li>プライベートブラウズ（シークレットモード）では保存されません。閲覧履歴やWebサイトのデータを消すと、記録も消えます。</li>
-      <li>入力した内容はインターネットには送られず、ご本人が「送る」まで誰にも見えません。ログインも不要です。</li>
+      <li>入力した内容はインターネットには送られず、ご本人がメールやLINEで送るまで誰にも見えません。ログインも不要です。</li>
     </ul>
   </div>
   <div class="card warm" id="inapp" hidden style="margin-top:16px">
@@ -210,41 +221,63 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
 
   <div class="card" style="margin-top:16px" id="sendCard">
     <h2 style="font-size:1.15rem">送り方を選んでください</h2>
-
-    <div class="way" id="wayShare" hidden>
-      <h3>スマホのアプリで送る（かんたん）</h3>
-      <p class="small">LINE・Gmail・メール・Teams・Slack・Chatworkなどを選ぶと、<b>記録の画像が添付された状態</b>で開きます。</p>
-      <button class="btn primary" id="share" type="button">アプリを選んで送る</button>
+    <p class="small muted">どの方法でも、記録はPDFファイルになって送られます。</p>
+    <div class="toline" id="toLine" hidden>送り先：<b id="toShow"></b> <button class="btn quiet mini" type="button" id="toCopy">コピー</button></div>
+    <div class="choices">
+      <button class="choice" type="button" id="cMail"><span class="ic" aria-hidden="true">✉</span><span><b>メールで送る</b><small>PDFが添付されたメールの下書きが開きます</small></span></button>
+      <button class="choice" type="button" id="cLine"><span class="ic line" aria-hidden="true">L</span><span><b>LINEで送る</b><small>LINEのトークでPDFを送ります</small></span></button>
+      <button class="choice" type="button" id="cOther"><span class="ic" aria-hidden="true">⋯</span><span><b>その他のアプリで送る</b><small>Teams・Slack・Chatworkなど</small></span></button>
     </div>
 
-    <div class="way">
-      <h3>メールで送る（パソコン・スマホ）</h3>
-      <p class="small"><b>記録の内容はメール本文に入ります。</b>添付をしなくても、そのまま送信すれば届きます。</p>
-      <label class="f" for="mailTo">送り先のメールアドレス（わかる場合）<input type="text" id="mailTo" inputmode="email" autocomplete="off" placeholder="例：sangyoui@example.com"></label>
-      <p class="small" style="font-weight:700">使っているメールを選んでください</p>
-      <div class="btns grid" id="mailbtns">
-        <a class="btn" id="mGmail" target="_blank" rel="noopener">Gmail</a>
-        <a class="btn" id="mO365" target="_blank" rel="noopener">Outlook（会社・学校）</a>
-        <a class="btn" id="mOutlook" target="_blank" rel="noopener">Outlook.com（個人）</a>
-        <a class="btn" id="mApp">メールアプリ</a>
+    <div class="panel" id="pMail" hidden>
+      <div data-for="share">
+        <p><b>次に開く一覧から、使っているメールアプリを選んでください。</b></p>
+        <p class="small">「メール」「Gmail」「Outlook」などを選ぶと、PDFが添付された下書きが開きます。宛先を入れて（または確認して）送信してください。</p>
+        <button class="btn primary" type="button" id="mailShareAgain">もう一度一覧を開く</button>
       </div>
-      <p class="small muted">Yahoo!メールなど上にないメールの場合は、下の「件名・本文をコピーする」を使ってください。</p>
-      <details class="help" id="copybox">
-        <summary>件名・本文をコピーする（どのメール・チャットでも使えます）</summary>
-        <div style="display:grid;gap:10px;margin-top:10px">
-          <div class="cprow"><span>宛先</span><input type="text" id="cpTo" readonly><button class="btn" type="button" data-copy="cpTo">コピー</button></div>
-          <div class="cprow"><span>件名</span><input type="text" id="cpSubj" readonly><button class="btn" type="button" data-copy="cpSubj">コピー</button></div>
-          <div class="cprow"><span>本文</span><textarea id="cpBody" readonly></textarea><button class="btn" type="button" data-copy="cpBody">コピー</button></div>
-          <a class="btn quiet" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener" style="justify-self:start">Yahoo!メールを開く</a>
+      <div data-for="pc">
+        <p><b>パソコンでの送り方を選んでください。</b></p>
+        <div class="btns grid">
+          <button class="btn primary" type="button" id="pcMailApp">メールアプリで送る<br><small>（Outlook・メールなど）</small></button>
+          <button class="btn" type="button" id="pcWebmail">ブラウザのメールで送る<br><small>（Gmail・Yahoo!メールなど）</small></button>
         </div>
-      </details>
+      </div>
+      <div id="webmailBox" hidden>
+        <p class="small"><b>PDFを保存しました。</b>次の手順で送ってください。</p>
+        <ol class="plain small" style="padding-left:1.4em">
+          <li>使っているメールの作成画面を開きます。<div class="btns" style="margin-top:6px"><a class="btn" id="wGmail" target="_blank" rel="noopener">Gmail</a><a class="btn" id="wYahoo" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener">Yahoo!メール</a><a class="btn" id="wOutlook" target="_blank" rel="noopener">Outlook（ブラウザ）</a></div></li>
+          <li>保存したPDF（「ダウンロード」フォルダの「<span class="fname"></span>」）を、作成画面にドラッグするか、クリップ（添付）マークから選びます。</li>
+          <li>宛先を確認して送信します。</li>
+        </ol>
+        <p class="small muted">※ブラウザのメールには、Webページから自動でファイルを添付することができないため、この方法になります。</p>
+      </div>
     </div>
 
-    <div class="way">
-      <h3>ファイルで保存する（必要な場合）</h3>
-      <p class="small muted">表の形で送りたいときや、チャットで送るときに使います。保存したファイルは、メールやチャットのクリップ（＋）マークから添付できます。</p>
-      <div class="btns"><button class="btn" id="savePng" type="button">画像で保存</button><button class="btn" id="saveXlsx" type="button">Excelで保存</button><button class="btn" id="print" type="button">印刷・PDF（パソコン）</button></div>
+    <div class="panel" id="pLine" hidden>
+      <div data-for="share">
+        <p><b>次に開く一覧から「LINE」を選び、送り先のトークを選んで送信してください。</b></p>
+        <p class="small muted">一覧にLINEがない場合は、一覧の右端の「その他」から探してください。</p>
+        <button class="btn primary" type="button" id="lineShareAgain">もう一度一覧を開く</button>
+      </div>
+      <div data-for="pc">
+        <p class="small"><b>PDFを保存しました。</b>パソコン版のLINEで送り先のトークを開き、保存したPDF（「<span class="fname"></span>」）をトークの画面にドラッグして送信してください。</p>
+      </div>
     </div>
+
+    <div class="panel" id="pOther" hidden>
+      <div data-for="share">
+        <p><b>次に開く一覧から、送りたいアプリ（Teams・Slack・Chatworkなど）を選んでください。</b></p>
+        <button class="btn primary" type="button" id="otherShareAgain">もう一度一覧を開く</button>
+      </div>
+      <div data-for="pc">
+        <p class="small"><b>PDFを保存しました。</b>Teams・Slack・Chatworkなどで送り先を開き、保存したPDF（「<span class="fname"></span>」）をドラッグするか、クリップ（＋）マークから選んで送信してください。</p>
+      </div>
+    </div>
+
+    <details class="help">
+      <summary>ファイルとして保存する（PDF・画像・Excel）</summary>
+      <div class="btns" style="margin-top:8px"><button class="btn" id="savePdf" type="button">PDFで保存</button><button class="btn" id="savePng" type="button">画像で保存</button><button class="btn" id="saveXlsx" type="button">Excelで保存</button></div>
+    </details>
     <p class="small"><b>健康に関わる大切な情報です。</b>送り先をよく確認し、グループではなく担当者への個別メッセージ（DM）で送ってください。</p>
   </div>
 
@@ -459,30 +492,6 @@ function renderOverview(){
 }
 $("ov").addEventListener("click",function(e){var t=e.target.closest("td.dt");if(!t)return;cur=+t.dataset.i;save();go(2);});
 
-/* ---------- record as text (for mail body) ---------- */
-function hourLabel(idx){return HOURS[idx]+"時";}
-function runs(arr,test){ // returns [[start,endExclusive],...] over 0..23 indices
-  var r=[],s=-1; for(var i=0;i<=24;i++){var on=i<24&&test(arr[i],i); if(on&&s<0)s=i; if(!on&&s>=0){r.push([s,i]);s=-1;}} return r;
-}
-function fmtRuns(rs){return rs.map(function(p){var a=HOURS[p[0]],b=(p[1]<24?HOURS[p[1]]:4); return (p[1]-p[0]===1)?a+"時":a+"〜"+b+"時";}).join("、");}
-function recordText(short){
-  var L=[];
-  L.push("【生活記録表】"+(S.name||"（お名前未入力）")+(S.start?"　"+label(0)+"〜"+label(N-1):""));
-  for(var i=0;i<N;i++){
-    var d=S.days[i];
-    var head="■"+label(i)+(d.mood!==""?"　気分"+d.mood+"（"+MOOD[d.mood]+"）":"")+(d.act!==""?"　活動度"+d.act:"");
-    L.push(head);
-    if(!dayDone(d)&&!d.cm){L.push("　（記入なし）");continue;}
-    var parts=[];
-    CODES.forEach(function(x){var rs=runs(d.a,function(v){return v===x.k;}); if(rs.length) parts.push(x.n+" "+fmtRuns(rs));});
-    var st=runs(d.s,function(v){return !!v;}); if(st.length) parts.push("服薬★ "+st.map(function(p){var o=[];for(var k=p[0];k<p[1];k++)o.push(HOURS[k]+"時");return o.join("・");}).join("・"));
-    if(parts.length) L.push("　"+parts.join(" ／ "));
-    if(d.cm&&!short) L.push("　ひとこと："+d.cm.replace(/\s*\n\s*/g," "));
-    if(d.cm&&short) L.push("　ひとこと："+d.cm.replace(/\s*\n\s*/g," ").slice(0,40)+(d.cm.length>40?"…":""));
-  }
-  return L.join("\n");
-}
-
 /* ---------- export (image / excel) ---------- */
 function fileBase(){var nm=(S.name||"").replace(/[\\\/:*?"<>|\s]/g,"");var d=new Date(),ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0");return "生活記録表_"+(nm?nm+"_":"")+ymd;}
 function drawCanvas(){
@@ -626,58 +635,82 @@ function buildXlsx(){
 }
 
 $("saveXlsx").addEventListener("click",function(){var b;try{b=buildXlsx();}catch(err){toast("Excelの作成に失敗しました。「画像で保存」をお使いください。");return;}download(b,fileBase()+".xlsx");toast("Excelファイルを保存しました（"+fileBase()+".xlsx）。",8000);});
-$("print").addEventListener("click",function(){window.print();});
+/* ---------- PDF (no library): canvas -> JPEG -> single-page A4 landscape PDF ---------- */
+function makePdfBlob(){
+  var cv=drawCanvas(), url=cv.toDataURL("image/jpeg",0.92), bin=atob(url.split(",")[1]);
+  var jpg=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) jpg[i]=bin.charCodeAt(i);
+  var PW=842,PH=595,M=20,W=cv.width,H=cv.height, sc=Math.min((PW-2*M)/W,(PH-2*M)/H);
+  var dw=(W*sc).toFixed(2), dh=(H*sc).toFixed(2), x=((PW-W*sc)/2).toFixed(2), y=(PH-M-H*sc).toFixed(2);
+  var enc=new TextEncoder(), chunks=[], off=0, offs=[];
+  function put(x){var u=typeof x==="string"?enc.encode(x):x; chunks.push(u); off+=u.length;}
+  function obj(n,body){offs[n]=off; put(n+" 0 obj\n"); if(typeof body==="string") put(body); else body(); put("\nendobj\n");}
+  put("%PDF-1.4\n%âãÏÓ\n");
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  obj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PW+" "+PH+"] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>");
+  var cs="q "+dw+" 0 0 "+dh+" "+x+" "+y+" cm /Im0 Do Q";
+  obj(4,"<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream");
+  obj(5,function(){put("<< /Type /XObject /Subtype /Image /Width "+W+" /Height "+H+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n"); put(jpg); put("\nendstream");});
+  var xref=off;
+  var t="xref\n0 6\n0000000000 65535 f \n"; for(var n=1;n<=5;n++) t+=String(offs[n]).padStart(10,"0")+" 00000 n \n";
+  put(t+"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF\n");
+  return new Blob(chunks,{type:"application/pdf"});
+}
+function pdfName(){return fileBase()+".pdf";}
+function savePdf(){ try{ download(makePdfBlob(),pdfName()); document.querySelectorAll(".fname").forEach(function(e){e.textContent=pdfName();}); return true; }catch(e){ toast("PDFの作成に失敗しました。「画像で保存」をお試しください。"); return false; } }
+$("savePdf").addEventListener("click",function(){ if(savePdf()) toast("PDFを保存しました（"+pdfName()+"）。",8000); });
 
-/* ---------- share / mail ---------- */
-$("share").addEventListener("click",function(){
-  toBlob(drawCanvas()).then(function(b){
-    var f=new File([b],fileBase()+".png",{type:"image/png"});
-    var data={files:[f],title:"生活記録表",text:recordText(true)};
-    if(navigator.canShare&&navigator.canShare({files:[f]})){
-      navigator.share(data).then(function(){toast("送るアプリを開きました。送り先を確認して送信してください。");}).catch(function(err){ if(err&&err.name==="AbortError") toast("共有を取り消しました。"); else {download(b,f.name); toast("共有できなかったため画像を保存しました。「メールで送る」からも送れます。",8000);}});
-    } else { download(b,f.name); toast("この端末では共有が使えないため画像を保存しました。「メールで送る」からも送れます。",8000); }
+/* ---------- send: mail / LINE / other ---------- */
+var COARSE=false; try{COARSE=window.matchMedia("(pointer: coarse)").matches;}catch(e){}
+function canShareFiles(){ try{ return !!(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([new Blob(["x"],{type:"application/pdf"})],"t.pdf",{type:"application/pdf"})]})); }catch(e){return false;} }
+var MOBILE_SHARE=COARSE&&canShareFiles();
+function subject(){return "【生活記録表】"+(S.name||"")+(S.start?"（"+label(0)+"〜"+label(N-1)+"）":"");}
+function bodyText(){return "生活記録表"+(S.start?"（"+label(0)+"〜"+label(N-1)+"）":"")+"を提出します。PDFを添付しました。"+(S.name?"\n"+S.name:"");}
+function sharePdf(kind){
+  var f; try{ f=new File([makePdfBlob()],pdfName(),{type:"application/pdf"}); }catch(e){ toast("PDFの作成に失敗しました。"); return; }
+  var data={files:[f],title:subject()}; if(kind==="mail") data.text=bodyText();
+  navigator.share(data).then(function(){
+    toast(kind==="line"?"LINEで送信できたら完了です。":"送信できたら完了です。おつかれさまでした。",7000);
+  }).catch(function(err){
+    if(err&&err.name==="AbortError") return;
+    if(savePdf()) toast("一覧を開けなかったため、PDFを保存しました。保存したPDFを添付して送ってください。",9000);
   });
-});
-function mailTo(){return ($("mailTo").value||"").trim();}
-function mailSubject(){return "【生活記録表】"+(S.name||"")+(S.start?"（"+label(0)+"〜"+label(N-1)+"）":"");}
-function mailBody(short){return "生活記録表を提出します。\n\n"+recordText(short)+"\n\n※記号：睡眠・食事・家事・外出・仕事・趣味・学習・運動、★＝服薬\n※気分：5とても良い〜1とても悪い／活動度：1〜7";}
-function enc(t){return encodeURIComponent(t);}
-var LIMIT=7000;
-function build(base,pTo,pSu,pBo){
-  var to=mailTo(),su=mailSubject(),u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc(mailBody(false));
-  if(u.length>LIMIT) u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc(mailBody(true));
-  if(u.length>LIMIT) u=base+pTo+enc(to)+"&"+pSu+enc(su)+"&"+pBo+enc("生活記録表を提出します。\n（記録の内容は長いため、ページの「件名・本文をコピーする」から本文を貼り付けてください）");
-  return u;
 }
-function updateMail(){
-  if(!$("mGmail")) return;
-  $("mGmail").href=build("https://mail.google.com/mail/?view=cm&fs=1&","to=","su=","body=");
-  $("mO365").href=build("https://outlook.office.com/mail/deeplink/compose?","to=","subject=","body=");
-  $("mOutlook").href=build("https://outlook.live.com/mail/0/deeplink/compose?","to=","subject=","body=");
-  var t=mailTo().replace(/[^A-Za-z0-9.!#$%&'*+\/=?^_`{|}~@-]/g,"");
-  $("mApp").href=build("mailto:"+t+"?","","subject=","body=").replace("mailto:"+t+"?&","mailto:"+t+"?");
-  $("cpTo").value=mailTo(); $("cpSubj").value=mailSubject(); $("cpBody").value=mailBody(false);
+function openPanel(id){
+  ["pMail","pLine","pOther"].forEach(function(p){$(p).hidden=(p!==id);});
+  ["cMail","cLine","cOther"].forEach(function(c){$(c).setAttribute("aria-expanded",String("p"+c.slice(1)===id));});
+  var mode=MOBILE_SHARE?"share":"pc";
+  $(id).querySelectorAll("[data-for]").forEach(function(d){d.hidden=(d.dataset.for!==mode);});
+  if(id!=="pMail") $("webmailBox").hidden=true;
 }
-$("mailbtns").addEventListener("click",function(e){
-  var a=e.target.closest("a"); if(!a) return;
-  if(a.id==="mApp") toast("メールアプリが開かない場合は、Gmail・Outlookを選ぶか、「件名・本文をコピーする」を使ってください。",9000);
-  else toast("メールの作成画面を開きました。記録の内容は本文に入っています。送り先を確認して送信してください。",9000);
+$("cMail").addEventListener("click",function(){ openPanel("pMail"); if(MOBILE_SHARE) sharePdf("mail"); else { $("webmailBox").hidden=true; $("pMail").scrollIntoView({block:"nearest"}); } });
+$("cLine").addEventListener("click",function(){ openPanel("pLine"); if(MOBILE_SHARE) sharePdf("line"); else savePdf(); });
+$("cOther").addEventListener("click",function(){ openPanel("pOther"); if(MOBILE_SHARE) sharePdf("other"); else savePdf(); });
+$("mailShareAgain").addEventListener("click",function(){sharePdf("mail");});
+$("lineShareAgain").addEventListener("click",function(){sharePdf("line");});
+$("otherShareAgain").addEventListener("click",function(){sharePdf("other");});
+$("pcMailApp").addEventListener("click",function(){
+  if(canShareFiles()) sharePdf("mail");
+  else {
+    if(savePdf()){ $("webmailBox").hidden=false; toast("この環境ではメールアプリへの自動添付ができないため、PDFを保存しました。下の手順で送ってください。",9000); }
+  }
 });
-$("copybox").addEventListener("click",function(e){
-  var b=e.target.closest("[data-copy]"); if(!b) return;
-  var el=$(b.dataset.copy),t=el.value;
-  function sel(){try{el.focus();el.select();el.setSelectionRange(0,t.length);}catch(_){}}
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("コピーしました。メールやチャットに貼り付けてください。");},function(){sel();toast("文字を選択しました。長押し（右クリック）→「コピー」を選んでください。");});}
-  else{sel();try{document.execCommand("copy");toast("コピーしました。");}catch(_){toast("文字を選択しました。長押し（右クリック）→「コピー」を選んでください。");}}
+$("pcWebmail").addEventListener("click",function(){
+  if(savePdf()){ $("webmailBox").hidden=false; toast("PDFを保存しました。メールの作成画面を開いて、PDFを添付してください。",9000); updateWebmail(); }
 });
-(function(){
-  var q=null; try{q=new URLSearchParams(location.search).get("to");}catch(e){}
-  if(q){S.to=q;}
-  $("mailTo").value=S.to||"";
-  $("mailTo").addEventListener("input",function(){S.to=this.value;save();});
-  var coarse=false; try{coarse=window.matchMedia("(pointer: coarse)").matches;}catch(e){}
-  if(coarse&&navigator.share&&navigator.canShare) $("wayShare").hidden=false;
-})();
+function toAddr(){return (S.to||"").trim();}
+function updateWebmail(){
+  var e=encodeURIComponent, to=toAddr();
+  $("wGmail").href="https://mail.google.com/mail/?view=cm&fs=1&to="+e(to)+"&su="+e(subject())+"&body="+e(bodyText());
+  $("wOutlook").href="https://outlook.office.com/mail/deeplink/compose?to="+e(to)+"&subject="+e(subject())+"&body="+e(bodyText());
+}
+function updateMail(){ if(!$("wGmail")) return; updateWebmail(); $("toLine").hidden=!toAddr(); $("toShow").textContent=toAddr(); }
+$("toCopy").addEventListener("click",function(){
+  var t=toAddr();
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("送り先のアドレスをコピーしました。宛先の欄に貼り付けてください。");},function(){toast("送り先："+t);});}
+  else toast("送り先："+t,9000);
+});
+(function(){ var q=null; try{q=new URLSearchParams(location.search).get("to");}catch(e){} if(q){S.to=q;} })();
 $("clear").addEventListener("click",function(){$("confirmBox").hidden=false;});
 $("clearNo").addEventListener("click",function(){$("confirmBox").hidden=true;});
 $("clearYes").addEventListener("click",function(){var to=S.to;S=blank();S.to=to;cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;toast("記録を消しました。");go(1);});
