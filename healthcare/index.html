@@ -114,6 +114,14 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
 .med .nm{font-size:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .med button{font:inherit;font-size:.85rem;min-height:36px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;cursor:pointer;color:var(--ink)}
 .choices{display:grid;gap:10px}
+.choice.sub{min-height:64px;padding:10px 12px}
+.choice.sub .ic{width:38px;height:38px;font-size:19px}
+ol.wsteps{margin:0;padding-left:1.6em;display:grid;gap:12px}
+ol.wsteps li::marker{font-weight:700;color:var(--accent)}
+ol.wsteps li>b{display:block}
+ol.wsteps small{display:block;font-size:.88rem;color:var(--muted);margin:2px 0 6px}
+ol.wsteps small.ok{color:var(--ok);font-weight:700}
+ol.wsteps .btns{margin-top:4px}
 .choice{font:inherit;display:flex;align-items:center;gap:14px;text-align:left;border:2px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:14px;padding:12px 14px;min-height:72px;cursor:pointer}
 .choice b{display:block;font-size:1.08rem}
 .choice small{display:block;color:var(--muted);font-size:.85rem;line-height:1.4}
@@ -252,27 +260,40 @@ table.ov{border-collapse:collapse;font-size:.82rem;min-width:760px;width:100%}
       <div data-for="share">
         <p><b>次に開く一覧から、使っているメールアプリを選んでください。</b></p>
         <p class="small">「メール」「Gmail」「Outlook」などを選ぶと、PDFが添付された下書きが開きます。</p>
-        <p class="small"><b>宛先の欄に「<span class="toaddr"></span>」を入れて送信してください。</b>（スマホの仕組み上、宛先は自動では入りません）</p>
-        <div><button class="btn quiet mini" type="button" data-copyto>宛先をコピーする</button></div>
+        <p class="small"><b>宛先「<span class="toaddr"></span>」はコピー済みです。</b>下書きの宛先の欄を長押しして「ペースト」を選ぶと入ります（スマホの仕組み上、宛先は自動では入りません）。</p>
+        <div><button class="btn quiet mini" type="button" data-copyto>もう一度コピーする</button></div>
         <button class="btn primary" type="button" id="mailShareAgain">もう一度一覧を開く</button>
       </div>
       <div data-for="pc">
-        <p><b>パソコンでの送り方を選んでください。</b></p>
-        <p class="small">メールアプリで送る場合は、開いた下書きの宛先に「<span class="toaddr"></span>」を入れてください（上の「コピー」が使えます）。</p>
-        <div class="btns grid">
-          <button class="btn primary" type="button" id="pcMailApp">メールアプリで送る<br><small>（Outlook・メールなど）</small></button>
-          <button class="btn" type="button" id="pcWebmail">ブラウザのメールで送る<br><small>（Gmail・Yahoo!メールなど）</small></button>
+        <p><b>ふだん、メールはどちらで使っていますか？</b></p>
+        <div class="choices">
+          <button class="choice sub" type="button" id="pcMailApp"><span class="ic" aria-hidden="true">🖥</span><span><b>パソコンのメールアプリ</b><small>Outlook・メールなど。PDFが添付された下書きが自動で開きます。</small></span></button>
+          <button class="choice sub" type="button" id="pcWebmail"><span class="ic" aria-hidden="true">🌐</span><span><b>ブラウザのメール</b><small>Gmail・Yahoo!メール・Outlook（Web版）など。PDFを保存してから添付します。</small></span></button>
         </div>
       </div>
+
+      <div id="appBox" hidden>
+        <p><b>PDFが添付された下書きが開きます。</b></p>
+        <ol class="wsteps">
+          <li><b>宛先の欄をクリックして、貼り付けます</b><small>宛先「<span class="toaddr"></span>」はコピー済みです。Ctrl＋V（Macは ⌘＋V）で貼り付けられます。</small><div><button class="btn quiet mini" type="button" data-copyto>もう一度コピーする</button></div></li>
+          <li><b>PDFが添付されていることを確かめて、送信します</b></li>
+        </ol>
+        <p class="small muted">下書きが開かないときは、上の「ブラウザのメール」を選んでください。</p>
+      </div>
+
       <div id="webmailBox" hidden>
-        <p class="small"><b>PDFを保存しました。</b>次の手順で送ってください。宛先「<span class="toaddr"></span>」は自動で入ります。</p>
-        <ol class="plain small" style="padding-left:1.4em">
-          <li>使っているメールの作成画面を開きます。<div class="btns" style="margin-top:6px"><a class="btn" id="wGmail" target="_blank" rel="noopener">Gmail</a><a class="btn" id="wYahoo" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener">Yahoo!メール</a><a class="btn" id="wOutlook" target="_blank" rel="noopener">Outlook（ブラウザ）</a></div></li>
-          <li>保存したPDF（「ダウンロード」フォルダの「<span class="fname"></span>」）を、作成画面にドラッグするか、クリップ（添付）マークから選びます。</li>
-          <li>宛先を確認して送信します。</li>
+        <p><b>ブラウザのメールでは、次の4つの手順で送ってください。</b></p>
+        <ol class="wsteps">
+          <li><b>記録をPDFで保存します</b>
+            <div><button class="btn primary" type="button" id="wSave">PDFを保存する</button></div>
+            <small class="ok" id="wSaved" hidden>✓ 保存しました。「ダウンロード」フォルダの「<span class="fname"></span>」です。</small></li>
+          <li><b>メールの作成画面を開きます</b><small>Gmail・Outlookは、宛先と件名が自動で入ります。Yahoo!メールは、宛先がコピーされるので貼り付けてください。</small>
+            <div class="btns" id="wLinks"><a class="btn" id="wGmail" target="_blank" rel="noopener">Gmail</a><a class="btn" id="wOutlook" target="_blank" rel="noopener">Outlook（Web版）</a><a class="btn" id="wYahoo" href="https://mail.yahoo.co.jp/" target="_blank" rel="noopener">Yahoo!メール</a></div></li>
+          <li><b>保存したPDFを添付します</b><small>作成画面のクリップ（📎 添付）マークを押し、「ダウンロード」フォルダの「<span class="fname">生活記録表_….pdf</span>」を選びます。ブラウザのダウンロード表示から、PDFを作成画面へドラッグしても添付できます。</small></li>
+          <li><b>PDFが添付されていることを確かめて、送信します</b></li>
         </ol>
         <p class="small extrapdf" hidden><b>おくすり手帳のPDFファイルを追加した場合は、そのファイルも一緒に添付してください。</b></p>
-        <p class="small muted">※ブラウザのメールには、Webページから自動でファイルを添付することができないため、この方法になります。</p>
+        <p class="small muted">※ブラウザのメールには、Webページから自動でファイルを添付する仕組みがないため、ご自身で添付していただく必要があります。</p>
       </div>
     </div>
 
@@ -764,22 +785,37 @@ function openPanel(id){
   ["cMail","cLine","cOther"].forEach(function(c){$(c).setAttribute("aria-expanded",String("p"+c.slice(1)===id));});
   var mode=MOBILE_SHARE?"share":"pc";
   $(id).querySelectorAll("[data-for]").forEach(function(d){d.hidden=(d.dataset.for!==mode);});
-  if(id!=="pMail") $("webmailBox").hidden=true;
+  if(id!=="pMail"){ $("webmailBox").hidden=true; $("appBox").hidden=true; }
 }
-$("cMail").addEventListener("click",function(){ openPanel("pMail"); if(MOBILE_SHARE) sharePdf("mail"); else { $("webmailBox").hidden=true; $("pMail").scrollIntoView({block:"nearest"}); } });
+$("cMail").addEventListener("click",function(){ openPanel("pMail"); if(MOBILE_SHARE){ copyTo(true); sharePdf("mail"); } else { $("webmailBox").hidden=true; $("appBox").hidden=true; $("pMail").scrollIntoView({block:"nearest"}); } });
 $("cLine").addEventListener("click",function(){ openPanel("pLine"); if(MOBILE_SHARE) sharePdf("line"); else savePdf(); });
 $("cOther").addEventListener("click",function(){ openPanel("pOther"); if(MOBILE_SHARE) sharePdf("other"); else savePdf(); });
-$("mailShareAgain").addEventListener("click",function(){sharePdf("mail");});
+$("mailShareAgain").addEventListener("click",function(){copyTo(true);sharePdf("mail");});
 $("lineShareAgain").addEventListener("click",function(){sharePdf("line");});
 $("otherShareAgain").addEventListener("click",function(){sharePdf("other");});
+function copyTo(quiet){
+  var t=toAddr(); if(!t) return;
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function(){ if(!quiet) toast("宛先「"+t+"」をコピーしました。宛先の欄に貼り付けてください。",8000); },function(){ if(!quiet) toast("宛先："+t,9000); }); else if(!quiet) toast("宛先："+t,9000); }catch(e){}
+}
+function markSaved(){ $("wSaved").hidden=false; document.querySelectorAll(".fname").forEach(function(e){e.textContent=pdfName();}); }
 $("pcMailApp").addEventListener("click",function(){
-  if(canShareFiles()) sharePdf("mail");
-  else {
-    if(savePdf()){ $("webmailBox").hidden=false; toast("この環境ではメールアプリへの自動添付ができないため、PDFを保存しました。下の手順で送ってください。",9000); }
-  }
+  $("pcMailApp").setAttribute("aria-expanded","true"); $("pcWebmail").setAttribute("aria-expanded","false");
+  copyTo(true);
+  $("webmailBox").hidden=true;
+  if(canShareFiles()){ $("appBox").hidden=false; sharePdf("mail"); toast("宛先をコピーしました。開いた下書きの宛先の欄に貼り付けてください。",9000); }
+  else { $("appBox").hidden=true; $("webmailBox").hidden=false; updateWebmail(); toast("このパソコンでは、メールアプリに自動で添付できませんでした。下の手順で送ってください。",9000); $("webmailBox").scrollIntoView({block:"nearest"}); }
 });
 $("pcWebmail").addEventListener("click",function(){
-  if(savePdf()){ $("webmailBox").hidden=false; toast("PDFを保存しました。メールの作成画面を開いて、PDFを添付してください。",9000); updateWebmail(); }
+  $("pcWebmail").setAttribute("aria-expanded","true"); $("pcMailApp").setAttribute("aria-expanded","false");
+  $("appBox").hidden=true; $("webmailBox").hidden=false; $("wSaved").hidden=imgDirty; updateWebmail();
+  $("webmailBox").scrollIntoView({block:"nearest"});
+});
+$("wSave").addEventListener("click",function(){ if(savePdf()){ imgDirty=false; markSaved(); toast("PDFを保存しました。次に②でメールの作成画面を開いてください。",8000); } });
+$("wLinks").addEventListener("click",function(e){
+  var a=e.target.closest("a"); if(!a) return;
+  if(imgDirty){ if(savePdf()){ imgDirty=false; markSaved(); } }
+  if(a.id==="wYahoo"){ copyTo(true); toast("宛先をコピーしました。Yahoo!メールで「メール作成」を押し、宛先に貼り付けてから、③のPDFを添付してください。",10000); }
+  else toast("作成画面を開きました。③の手順で、保存したPDFを添付してから送信してください。",10000);
 });
 var QUERY_TO="";
 try{QUERY_TO=(new URLSearchParams(location.search).get("to")||"").trim();}catch(e){}
