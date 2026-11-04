@@ -326,7 +326,7 @@ var KEY="seikatsu-kiroku-v1";
 var $=function(id){return document.getElementById(id);};
 
 function blankDay(){return {a:Array(24).fill(""),s:Array(24).fill(false),mood:"",act:"",cm:""};}
-function blank(){var d=[];for(var i=0;i<N;i++)d.push(blankDay());return {name:"",start:"",days:d,to:"",ts:0,cur:0};}
+function blank(){var d=[];for(var i=0;i<N;i++)d.push(blankDay());return {name:"",start:"",days:d,ts:0,cur:0};}
 var S=blank(), restored=false;
 try{var raw=localStorage.getItem(KEY); if(raw){var p=JSON.parse(raw); if(p&&p.days&&p.days.length){p.days=p.days.slice(0,N); while(p.days.length<N)p.days.push(blankDay()); S=Object.assign(blank(),p); restored=true;}}}catch(e){}
 var cur=Math.min(Math.max(+S.cur||0,0),N-1), tool="睡", step=1, imgDirty=true;
@@ -701,8 +701,9 @@ $("pcMailApp").addEventListener("click",function(){
 $("pcWebmail").addEventListener("click",function(){
   if(savePdf()){ $("webmailBox").hidden=false; toast("PDFを保存しました。メールの作成画面を開いて、PDFを添付してください。",9000); updateWebmail(); }
 });
-var DEFAULT_TO="t-healthcare@sakurajyuji.jp";
-function toAddr(){return (S.to||DEFAULT_TO||"").trim();}
+var DEFAULT_TO="t-healthcare@sakurajyuji.jp", QUERY_TO="";
+try{QUERY_TO=(new URLSearchParams(location.search).get("to")||"").trim();}catch(e){}
+function toAddr(){return (QUERY_TO||DEFAULT_TO).trim();}
 function updateWebmail(){
   var e=encodeURIComponent, to=toAddr();
   $("wGmail").href="https://mail.google.com/mail/?view=cm&fs=1&to="+e(to)+"&su="+e(subject())+"&body="+e(bodyText());
@@ -715,10 +716,10 @@ $("toCopy").addEventListener("click",function(){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("送り先のアドレスをコピーしました。宛先の欄に貼り付けてください。");},function(){toast("送り先："+t);});}
   else toast("送り先："+t,9000);
 });
-(function(){ var q=null; try{q=new URLSearchParams(location.search).get("to");}catch(e){} if(q){S.to=q;} })();
+if(S.to) delete S.to; /* 以前の版で端末に保存された送り先は使わない */
 $("clear").addEventListener("click",function(){$("confirmBox").hidden=false;});
 $("clearNo").addEventListener("click",function(){$("confirmBox").hidden=true;});
-$("clearYes").addEventListener("click",function(){var to=S.to;S=blank();S.to=to;cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;toast("記録を消しました。");go(1);});
+$("clearYes").addEventListener("click",function(){S=blank();cur=0;save();$("name").value="";$("start").value="";$("confirmBox").hidden=true;toast("記録を消しました。");go(1);});
 
 /* ---------- start ---------- */
 updateMail();
